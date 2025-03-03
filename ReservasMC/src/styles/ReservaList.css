@@ -1,0 +1,115 @@
+.reservas-list {
+  margin: 20px;
+  padding: 1rem;
+  width: 100%;
+  overflow-x: auto;
+  box-sizing: border-box;
+}
+
+.reservas-list h3 {
+  margin: 0;
+  text-align: center;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.reservas-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.reservas-list th,
+.reservas-list td {
+  padding: 0.75rem;
+  text-align: center;
+  border: 1px solid #ddd;
+  min-width: 100px;
+}
+
+.reservas-list th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.reservas-list tr:hover {
+  background-color: #f5f5f5;
+}
+
+
+
+
+
+.anterior {
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 768px) {
+  .reservas-list {
+    padding: 0.5rem;
+  }
+
+  .reservas-list table {
+    font-size: 0.9rem;
+  }
+
+  .reservas-list th,
+  .reservas-list td {
+    padding: 0.5rem;
+    min-width: 80px;
+  }
+
+
+}
+
+/* For very small screens */
+@media screen and (max-width: 480px) {
+  .reservas-list {
+    padding: 0.25rem;
+  }
+
+  .reservas-list table {
+    font-size: 0.8rem;
+  }
+
+  .reservas-list th,
+  .reservas-list td {
+    padding: 0.25rem;
+    min-width: 60px;
+  }
+
+  .reservas-list h3 {
+    font-size: 1rem;
+  }
+
+
+}
+
+.reservas-container {
+  display: grid;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.time-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.time-slot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+
+

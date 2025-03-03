@@ -1,0 +1,62 @@
+.profile {
+  padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.profile h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.profile-info {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.profile-info p {
+  margin: 0.5rem 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 768px) {
+  .profile {
+    padding: 0.5rem;
+  }
+
+  .profile h2 {
+    font-size: 1.5rem;
+  }
+
+  .profile-info {
+    padding: 0.5rem;
+  }
+}
+
+/* For very small screens */
+@media screen and (max-width: 480px) {
+  .profile {
+    padding: 0.25rem;
+  }
+
+  .profile h2 {
+    font-size: 1.2rem;
+  }
+
+  .profile-info {
+    padding: 0.25rem;
+  }
+
+  .profile-info p {
+    font-size: 0.9rem;
+    flex-direction: column;
+    text-align: center;
+  }
+}

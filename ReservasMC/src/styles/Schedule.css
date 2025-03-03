@@ -1,0 +1,165 @@
+.schedule {
+  padding: 1rem;
+  width: 100%;
+  overflow-x: auto;
+  box-sizing: border-box; /* Asegura que el padding se incluya en el ancho total */
+}
+
+.schedule-header {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.schedule-header input[type="date"] {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.schedule-header h3 {
+  margin: 0;
+  text-align: center;
+  color: #333;
+}
+
+.schedule table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 auto;
+  background: white;
+}
+
+.schedule th,
+.schedule td {
+  padding: 0.75rem;
+  text-align: center;
+  border: 1px solid #ddd;
+  min-width: 100px;
+}
+
+.schedule th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.schedule td:first-child {
+  font-weight: 500;
+  background-color: #f8f9fa;
+}
+
+.btn-reservar,
+.btn-cancelar {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  background: none; /* Sin fondo */
+  border: 2px solid; /* Borde sólido */
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.btn-reservar {
+  border-color: #28a745; /* Color del borde */
+  color: #28a745; /* Color del texto */
+}
+
+.btn-reservar:hover {
+  background-color: #28a745; /* Fondo al pasar el ratón */
+  color: white; /* Color del texto al pasar el ratón */
+}
+
+.btn-cancelar {
+  border-color: #dc3545; /* Color del borde */
+  color: #dc3545; /* Color del texto */
+}
+
+.btn-cancelar:hover {
+  background-color: #dc3545; /* Fondo al pasar el ratón */
+  color: white; /* Color del texto al pasar el ratón */
+}
+
+.booked {
+  background-color: #f8f9fa;
+  color: #6c757d;
+}
+
+.available {
+  cursor: pointer;
+}
+
+.available:hover {
+  background-color: #e9ecef;
+}
+
+.reservation-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.reservation-user {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 768px) {
+  .schedule {
+    padding: 0.5rem;
+  }
+
+  .schedule table {
+    font-size: 0.9rem;
+  }
+
+  .schedule th,
+  .schedule td {
+    padding: 0.5rem;
+    min-width: 80px;
+  }
+
+  .btn-reservar,
+  .btn-cancelar {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  .reservation-user {
+    font-size: 0.7rem;
+  }
+}
+
+/* For very small screens */
+@media screen and (max-width: 480px) {
+  .schedule {
+    padding: 0.25rem;
+  }
+
+  .schedule table {
+    font-size: 0.8rem;
+  }
+
+  .schedule th,
+  .schedule td {
+    padding: 0.25rem;
+    min-width: 60px;
+  }
+
+  .schedule-header {
+    gap: 0.5rem;
+  }
+
+  .schedule-header h3 {
+    font-size: 1rem;
+  }
+
+  .btn-reservar,
+  .btn-cancelar {
+    padding: 0.3rem;
+    font-size: 0.7rem;
+  }
+}
