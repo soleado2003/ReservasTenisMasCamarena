@@ -5,7 +5,20 @@ const config = require('../config/config');
 
 exports.register = async (req, res) => {
   try {
-    const { email, nombre, password, descripcion } = req.body;
+    // Añade los nuevos campos a la desestructuración
+    const {
+      email,
+      nombre,
+      apellidos,
+      telefono,
+      direccion,
+      numero,
+      puerta,
+      password,
+      descripcion
+    } = req.body;
+
+    // Comprueba campos obligatorios
     if (!email || !nombre || !password) {
       return res.status(400).json({ message: 'Faltan campos obligatorios' });
     }
@@ -20,18 +33,39 @@ exports.register = async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     
-    // Insertar el usuario
+    // Insertar el usuario con verificado en false por defecto
     await db.query(
-      'INSERT INTO `User` (email, nombre, password, descripcion) VALUES (?, ?, ?, ?)', 
-      [email, nombre, hashedPassword, descripcion || '']
+      `INSERT INTO \`User\` (
+        email, nombre, apellidos, telefono, direccion, numero, puerta, password, descripcion, verificado
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        email,
+        nombre,
+        apellidos || '',
+        telefono || '',
+        direccion || '',
+        numero || 0,
+        puerta || '',
+        hashedPassword,
+        descripcion || '',
+        false
+      ]
     );
     
-    res.status(201).json({ message: 'Usuario registrado exitosamente' });
+    // Consultar el mensaje de registro desde la tabla AppConfig
+    const [configRows] = await db.query('SELECT registration_text FROM AppConfig LIMIT 1');
+    const registrationText = (configRows.length > 0 && configRows[0].registration_text) 
+      ? configRows[0].registration_text 
+      : 'Usuario registrado exitosamente';
+    
+    res.status(201).json({ message: registrationText });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error en el registro del usuario' });
   }
 };
+
 
 exports.login = async (req, res) => {
   try {

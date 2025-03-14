@@ -14,16 +14,16 @@ app.use(express.json());
 // Importación de rutas
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
-const clubRoutes = require('./routes/clubs');
 const pistaRoutes = require('./routes/pistas');
 const reservaRoutes = require('./routes/reservas');
+const configRoutes = require('./routes/config');
 
 // Uso de rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/club', clubRoutes);
 app.use('/api/pistas', pistaRoutes);
 app.use('/api/reservas', reservaRoutes);
+app.use('/api/config', configRoutes);
 
 const PORT = process.env.PORT || 3010;
 app.listen(PORT, () => {

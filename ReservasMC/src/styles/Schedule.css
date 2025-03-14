@@ -58,12 +58,12 @@
   cursor: pointer;
   font-size: 0.9rem;
   background: none; /* Sin fondo */
-  border: 2px solid; /* Borde sólido */
+  border: 1px solid; /* Borde sólido */
   transition: background-color 0.3s, color 0.3s;
 }
 
 .btn-reservar {
-  border-color: #28a745; /* Color del borde */
+  border-color: #fff; /* Color del borde */
   color: #28a745; /* Color del texto */
 }
 

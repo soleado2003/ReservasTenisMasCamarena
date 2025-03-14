@@ -62,7 +62,8 @@ function Schedule() {
       alert('Reserva creada con éxito');
     } catch (error) {
       console.error('Error al realizar la reserva:', error);
-      alert('Error al realizar la reserva. Por favor, inténtelo de nuevo.');
+      const errorMessage = error.message ? ` ${error.message}` : '';
+      alert(`Error al realizar la reserva. Por favor, inténtelo de nuevo.${errorMessage}`);
     }
   };
 

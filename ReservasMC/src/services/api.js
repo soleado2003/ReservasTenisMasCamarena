@@ -1,6 +1,6 @@
 export const fetchWithToken = async (url, options = {}) => {
   const token = localStorage.getItem('token');
-  
+
   if (!token) {
     throw new Error('No token found');
   }
@@ -19,11 +19,17 @@ export const fetchWithToken = async (url, options = {}) => {
   });
 
   if (!response.ok) {
+    let errorData = {};
+    try {
+      errorData = await response.json();
+    } catch (e) {
+      // ignore
+    }
     if (response.status === 403) {
       localStorage.removeItem('token');
       throw new Error('Token inválido o expirado');
     }
-    throw new Error(`Error en la petición: ${response.status}`);
+    throw new Error(errorData.message || `Error en la petición: ${response.status}`);
   }
 
   return response.json();

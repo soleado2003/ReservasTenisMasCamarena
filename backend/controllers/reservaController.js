@@ -25,6 +25,13 @@ exports.getUserReservas = async (req, res) => {
 
 exports.createReserva = async (req, res) => {
   try {
+    // Verificar si el usuario está verificado
+    const [userRows] = await db.query('SELECT verificado FROM `User` WHERE email = ?', [req.user.email]);
+    if (userRows.length === 0 || !userRows[0].verificado) {
+      return res.status(422).json({   
+        message: 'No puedes reservar pistas hasta que el administrador verifique tu información.' 
+      });
+    }
     const user_email = req.user.email;
     const { pista_id, fecha, horaInicio, horaFin, precio } = req.body;
 
@@ -46,7 +53,7 @@ exports.createReserva = async (req, res) => {
       return res.status(409).json({ message: 'La pista ya está reservada para ese horario' });
     }
 
-    // Crear la reserva (sin referencia al club)
+    // Crear la reserva
     await db.query(
       'INSERT INTO Reserva (user_email, pista_id, fecha, horaInicio, horaFin, precio) VALUES (?, ?, ?, ?, ?, ?)',
       [user_email, pista_id, fecha, horaInicio, horaFin, precio]
@@ -68,7 +75,20 @@ exports.getAllReservas = async (req, res) => {
     return res.status(403).json({ message: 'Acceso denegado' });
   }
   try {
-    const [rows] = await db.query('SELECT * FROM Reserva');
+    const { start_date, end_date } = req.query;
+    let query = 'SELECT * FROM Reserva';
+    let params = [];
+
+    // Si tenemos fechas de inicio y fin, añadimos el filtro
+    if (start_date && end_date) {
+      query += ' WHERE fecha BETWEEN ? AND ?';
+      params = [start_date, end_date];
+    }
+
+    // Ordenamos por fecha y hora
+    query += ' ORDER BY fecha, horaInicio';
+
+    const [rows] = await db.query(query, params);
     res.json(rows);
   } catch (error) {
     console.error(error);
@@ -83,10 +103,10 @@ exports.updateReserva = async (req, res) => {
   }
   try {
     const id = req.params.id;
-    const { user_email, club_cif, pista_id, fecha, horaInicio, horaFin, precio } = req.body;
+    const { user_email,  pista_id, fecha, horaInicio, horaFin, precio } = req.body;
     await db.query(
-      'UPDATE Reserva SET user_email = ?, club_cif = ?, pista_id = ?, fecha = ?, horaInicio = ?, horaFin = ?, precio = ? WHERE id = ?',
-      [user_email, club_cif, pista_id, fecha, horaInicio, horaFin, precio, id]
+      'UPDATE Reserva SET user_email = ?,  pista_id = ?, fecha = ?, horaInicio = ?, horaFin = ?, precio = ? WHERE id = ?',
+      [user_email, pista_id, fecha, horaInicio, horaFin, precio, id]
     );
     res.json({ message: 'Reserva actualizada exitosamente' });
   } catch (error) {

@@ -42,12 +42,13 @@ exports.updateProfile = async (req, res) => {
 };
 
 exports.getAllUsers = async (req, res) => {
-  // Solo admin
   if (!req.user.admin) {
     return res.status(403).json({ message: 'Acceso denegado' });
   }
   try {
-    const [rows] = await db.query('SELECT email, nombre, descripcion, fotoPerfil, nivelJuego, admin FROM `User`');
+    const [rows] = await db.query(
+      'SELECT email, nombre, descripcion, fotoPerfil, nivelJuego, admin, verificado, id_ext FROM `User`'
+    );
     res.json(rows);
   } catch (error) {
     console.error(error);
@@ -56,17 +57,16 @@ exports.getAllUsers = async (req, res) => {
 };
 
 exports.updateUserByAdmin = async (req, res) => {
-  // Solo admin
   if (!req.user.admin) {
     return res.status(403).json({ message: 'Acceso denegado' });
   }
   try {
     const email = req.params.email;
-    const { nombre, descripcion, fotoPerfil, nivelJuego, admin } = req.body;
+    const { nombre, descripcion, fotoPerfil, nivelJuego, admin, verificado, id_ext } = req.body;
     
     await db.query(
-      'UPDATE `User` SET nombre = ?, descripcion = ?, fotoPerfil = ?, nivelJuego = ?, admin = ? WHERE email = ?',
-      [nombre, descripcion, fotoPerfil, nivelJuego, admin, email]
+      'UPDATE `User` SET nombre = ?, descripcion = ?, fotoPerfil = ?, nivelJuego = ?, admin = ?, verificado = ?, id_ext = ? WHERE email = ?',
+      [nombre, descripcion, fotoPerfil, nivelJuego, admin, verificado, id_ext, email]
     );
     res.json({ message: 'Usuario actualizado' });
   } catch (error) {

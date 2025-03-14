@@ -16,8 +16,8 @@ exports.createPista = async (req, res) => {
     return res.status(403).json({ message: 'Acceso denegado' });
   }
   try {
-    const { club_cif, tipo, formato } = req.body;
-    await db.query('INSERT INTO Pista (club_cif, tipo, formato) VALUES (?, ?, ?)', [club_cif, tipo, formato]);
+    const {  tipo, formato } = req.body;
+    await db.query('INSERT INTO Pista ( tipo, formato) VALUES ( ?, ?)', [ tipo, formato]);
     res.status(201).json({ message: 'Pista creada exitosamente' });
   } catch (error) {
     console.error(error);

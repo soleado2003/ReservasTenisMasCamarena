@@ -11,30 +11,31 @@ function Navbar() {
   };
 
   return (
-    <nav>
-      <ul>
-        <li><Link to="/">Pistas</Link></li>
-
+    <nav >
+      <ul > 
+        <li>
+          <Link to="/"><img src="/assets/logotenis2.svg" height="15px" /> Pistas</Link>
+        </li>
         {user ? (
           <>
             <li>
-              <Link to="/profile">{user.nombre}</Link>
+              <Link to={user.admin ? "/admin" : "/profile"}>{user.nombre}</Link>
             </li>
             <li>
-              <button 
-                onClick={handleLogout} 
-                className="logout-btn" 
+              <button
+                onClick={handleLogout}
+                className="logout-btn"
                 title="Cerrar Sesión"
               >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="24" 
-                  height="24" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
                   strokeLinejoin="round"
                 >
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -45,9 +46,7 @@ function Navbar() {
             </li>
           </>
         ) : (
-          <>
-            <li><Link to="/login">Login</Link></li>
-          </>
+          <li><Link to="/login">Login</Link></li>
         )}
       </ul>
     </nav>
