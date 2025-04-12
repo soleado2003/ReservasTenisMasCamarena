@@ -17,6 +17,7 @@ async function connectToDatabase() {
     console.error('Error al conectar a la base de datos:', error);
   }
 }
+// prueba
 
 connectToDatabase();
 
