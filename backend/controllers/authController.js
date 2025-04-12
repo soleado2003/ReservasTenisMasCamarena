@@ -86,7 +86,7 @@ exports.login = async (req, res) => {
     }
     
     // Crear token JWT
-    const token = jwt.sign({ email: user.email, admin: user.admin }, config.jwtSecret, { expiresIn: '1d' });
+    const token = jwt.sign({ email: user.email, admin: user.admin }, config.jwtSecret, { expiresIn: '1y' });
     
     // Create a user object without sensitive information
     const userResponse = {

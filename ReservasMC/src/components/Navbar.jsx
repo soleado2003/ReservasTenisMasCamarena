@@ -12,9 +12,11 @@ function Navbar() {
 
   return (
     <nav >
-      <ul > 
+      <ul >
         <li>
-          <Link to="/"><img src="/assets/logotenis2.svg" height="15px" /> Pistas</Link>
+          <Link to="/">
+            <img src={`${import.meta.env.BASE_URL}assets/logotenis2.svg`} height="15px" alt="logo" /> Pistas
+          </Link>
         </li>
         {user ? (
           <>

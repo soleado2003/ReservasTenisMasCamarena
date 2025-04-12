@@ -24,7 +24,7 @@ function LoginForm() {
         setError('Error: Datos de inicio de sesión incorrectos');
       }
     } catch (error) {
-      setError('Error al intentar iniciar sesión');
+      setError('Error al intentar iniciar sesión', error);
     }
   };
 
