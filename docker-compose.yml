@@ -1,0 +1,59 @@
+
+services:
+  frontend:
+    image: nginx:alpine
+    container_name: reservas_frontend
+    restart: always 
+    ports:
+      - "8080:80"
+    volumes:
+      - ./ReservasMC/dist:/usr/share/nginx/html
+    networks:
+      - default
+      - npm
+
+  backend:
+    build: ./backend
+    container_name: reservas_backend
+    restart: always
+    ports:
+      - "3010:3010"
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=reservas_user
+      - DB_PASSWORD=Reservas1234-
+      - DB_DATABASE=reserva_tenis
+      - DB_PORT=3306
+    depends_on:
+      - mysql
+    networks:
+      - default
+      - npm
+
+  mysql:
+    image: mysql:8.0
+    container_name: reservas_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: reserva_tenis
+      MYSQL_USER: reservas_user
+      MYSQL_PASSWORD: Reservas1234-
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - default
+
+volumes:
+  mysql_data:
+
+networks:
+  default:
+    name: reservas_network
+  npm:
+    external: true
+    name: nginx_proxy_manager_ubuntu_default
+
