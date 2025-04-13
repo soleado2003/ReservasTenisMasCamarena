@@ -1,0 +1,20 @@
+name: Despliegue automático
+
+on:
+  push:
+    branches:
+      - main  # O la rama que estés utilizando
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Establecer permisos de ejecución para deploy.sh
+        run: chmod +x deploy.sh
+
+      - name: Ejecutar el script de despliegue
+        run: ./deploy.sh
