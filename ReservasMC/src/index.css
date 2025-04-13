@@ -14,7 +14,7 @@ body {
 
 /* Estilos para el Navbar */
 nav {
-  background-color: #00CC99;
+  background-color: #4D897D;
   color: #fff;
   padding: 1rem;
 }
@@ -57,7 +57,7 @@ nav button:hover {
 
 /* Estilos para el Footer */
 footer {
-  background-color: #00CC99;
+  background-color: #4D897D;
   color: #fff;
   text-align: center;
   padding: 1rem;
