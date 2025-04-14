@@ -12,3 +12,4 @@ echo "📦 Construyendo y desplegando servicios..."
 docker compose up -d --build
 
 echo "✅ Despliegue completado."
+
