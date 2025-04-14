@@ -15,7 +15,7 @@ function Navbar() {
       <ul >
         <li>
           <Link to="/">
-            <img src={`${import.meta.env.BASE_URL}assets/logotenis2.svg`} height="15px" alt="logo" />Pistas
+            <img src={`${import.meta.env.BASE_URL}assets/logotenis2.svg`} height="15px" alt="logo" />Horarios
           </Link>
         </li>
         {user ? (
