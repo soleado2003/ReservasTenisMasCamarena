@@ -1,3 +1,8 @@
+#!/bin/bash
+
+# Ensure script exits on any error
+set -e
+
 echo "🧼 Borrando frontend antiguo..."
 cd ReservasMC
 rm -rf dist
@@ -6,16 +11,15 @@ npm run build
 cd ..
 
 echo "🧹 Limpiando contenedores existentes..."
-# Force stop any running containers
-sudo docker compose kill || true
-# Remove containers and networks
-sudo docker compose down --remove-orphans || true
-# Remove any dangling containers
-sudo docker system prune -f
+# Stop and remove all containers
+sudo docker compose down || true
+
+# Remove any dangling images, volumes, and networks
+sudo docker system prune -af || true
 
 echo "📦 Construyendo y desplegando servicios..."
+# Build and start the services
 sudo docker compose up -d --build
 
 echo "✅ Despliegue completado."
-
 echo "🚀 Accediendo a la aplicación..."
