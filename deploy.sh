@@ -13,3 +13,5 @@ docker compose up -d --build
 
 echo "✅ Despliegue completado."
 
+
+echo "🚀 Accediendo a la aplicación..."
