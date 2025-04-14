@@ -6,7 +6,7 @@ npm run build
 cd ..
 
 echo "🧹 Limpiando contenedores existentes..."
-docker compose down --remove-orphans
+sudodocker compose down --remove-orphans
 
 echo "📦 Construyendo y desplegando servicios..."
 docker compose up -d --build
