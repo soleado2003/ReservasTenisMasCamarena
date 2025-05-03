@@ -11,7 +11,7 @@ ENV NODE_ENV=production
 COPY package*.json ./
 
 # Instalamos únicamente las deps de prod
-RUN npm ci --omit=dev
+RUN npm install
 
 # Copiamos el resto del código
 COPY . .
