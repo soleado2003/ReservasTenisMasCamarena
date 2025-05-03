@@ -23,51 +23,75 @@ exports.getUserReservas = async (req, res) => {
   }
 };
 
+// controllers/reservaController.js
 exports.createReserva = async (req, res) => {
   try {
-    // Verificar si el usuario está verificado
-    const [userRows] = await db.query('SELECT verificado FROM `User` WHERE email = ?', [req.user.email]);
-    if (userRows.length === 0 || !userRows[0].verificado) {
-      return res.status(422).json({   
-        message: 'No puedes reservar pistas hasta que el administrador verifique tu información.' 
-      });
-    }
-    const user_email = req.user.email;
-    const { pista_id, fecha, horaInicio, horaFin, precio } = req.body;
+    const { user_email, club_cif, pista_id, fecha, horaInicio, horaFin, precio } = req.body;
+    const finalEmail = req.user.admin && user_email ? user_email : req.user.email;
 
-    // Validaciones
-    if (!pista_id || !fecha || !horaInicio || !horaFin || !precio) {
-      return res.status(400).json({ 
-        message: 'Faltan campos requeridos',
-        received: { pista_id, fecha, horaInicio, horaFin, precio }
-      });
-    }
+    // 1) Carga de configuración
+    const [cfgRows] = await db.query("SELECT * FROM AppConfig LIMIT 1");
+    if (!cfgRows.length) return res.status(500).json({ message: 'Configuración no encontrada' });
+    const cfg = cfgRows[0];
 
-    // Verificar disponibilidad
-    const [existingReserva] = await db.query(
-      'SELECT * FROM Reserva WHERE pista_id = ? AND fecha = ? AND horaInicio = ?',
-      [pista_id, fecha, horaInicio]
+    // 2) Cálculo de slots solicitados
+    const toMinutes = s => { const [h,m]=s.split(':').map(Number); return h*60+m; };
+    const slots = (toMinutes(horaFin) - toMinutes(horaInicio)) / 30;
+
+    // 3) Primera reserva del día: fuerza mínimo
+    const [{ count: todayCount }] = await db.query(
+      'SELECT COUNT(*) AS count FROM Reserva WHERE user_email = ? AND fecha = ?',
+      [finalEmail, fecha]
     );
-
-    if (existingReserva.length > 0) {
-      return res.status(409).json({ message: 'La pista ya está reservada para ese horario' });
+    if (todayCount === 0 && slots < cfg.min_slots_per_booking) {
+      return res.status(400).json({
+        message: `Para tu primera reserva del día debes reservar al menos ${cfg.min_slots_per_booking * 0.5} hora(s).`
+      });
     }
 
-    // Crear la reserva
+    // 4) Validar slots individuales
+    if (slots < cfg.min_slots_per_booking || slots > cfg.max_slots_per_booking) {
+      return res.status(400).json({
+        message: `Cada reserva debe ser de entre ${cfg.min_slots_per_booking * 0.5} y ${cfg.max_slots_per_booking * 0.5} hora(s).`
+      });
+    }
+
+    // 5) Validar límite semanal de slots
+    const bookingDate = new Date(fecha);
+    const day = bookingDate.getUTCDay(), diff = (day === 0 ? -6 : 1 - day);
+    const monday = new Date(bookingDate); monday.setUTCDate(bookingDate.getUTCDate() + diff);
+    const sunday = new Date(monday); sunday.setUTCDate(monday.getUTCDate() + 6);
+    const fmt = d => d.toISOString().slice(0,10);
+
+    const [[{ total_slots }]] = await db.query(
+      `SELECT 
+         COALESCE(SUM((TIME_TO_SEC(horaFin)-TIME_TO_SEC(horaInicio))/1800),0) AS total_slots
+       FROM Reserva
+       WHERE user_email = ? 
+         AND fecha BETWEEN ? AND ?`,
+      [finalEmail, fmt(monday), fmt(sunday)]
+    );
+    if (total_slots + slots > cfg.weekly_slots_limit) {
+      return res.status(400).json({
+        message: `No puedes reservar más de ${cfg.weekly_slots_limit * 0.5} hora(s) por semana.`
+      });
+    }
+
+    // 6) Insertar si pasa todas las validaciones
     await db.query(
-      'INSERT INTO Reserva (user_email, pista_id, fecha, horaInicio, horaFin, precio) VALUES (?, ?, ?, ?, ?, ?)',
-      [user_email, pista_id, fecha, horaInicio, horaFin, precio]
+      `INSERT INTO Reserva 
+        (user_email, club_cif, pista_id, fecha, horaInicio, horaFin, precio)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [finalEmail, club_cif, pista_id, fecha, horaInicio, horaFin, precio]
     );
 
     res.status(201).json({ message: 'Reserva creada exitosamente' });
   } catch (error) {
-    console.error('Error en createReserva:', error);
-    res.status(500).json({ 
-      message: 'Error al crear la reserva',
-      error: error.message 
-    });
+    console.error(error);
+    res.status(500).json({ message: 'Error al crear la reserva' });
   }
 };
+
 
 exports.getAllReservas = async (req, res) => {
   // Solo admin

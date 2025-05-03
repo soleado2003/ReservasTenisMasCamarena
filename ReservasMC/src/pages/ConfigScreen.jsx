@@ -3,11 +3,17 @@ import { fetchWithToken } from '../services/api';
 
 function ConfigScreen() {
   const [config, setConfig] = useState({
-    max_hours_day: 0,
-    max_hours_week: 0,
-    send_verification_email: false,
-    registration_text: '',
-    verification_email_text: ''
+       max_hours_day: 0,
+       max_hours_week: 0,
+       // nuevos parámetros de reservas
+       daily_bookings_limit: 0,
+       min_slots_per_booking: 0,
+       max_slots_per_booking: 0,
+       weekly_slots_limit: 0,
+       // resto de configuraciones
+       send_verification_email: false,
+       registration_text: '',
+       verification_email_text: ''
   });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -34,6 +40,7 @@ function ConfigScreen() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      setMessage('Guardando configuración...');
       await fetchWithToken(import.meta.env.VITE_API_URL + '/config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -77,6 +84,49 @@ function ConfigScreen() {
             style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
           />
         </div>
+{/* Nuevos parámetros de reservas  */}
+       <div style={{ marginBottom: '15px' }}>
+         <label>Límite reservas por día: </label>
+         <input
+           type="number"
+           name="daily_bookings_limit"
+           value={config.daily_bookings_limit}
+           onChange={handleChange}
+           style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+         />
+       </div>
+       <div style={{ marginBottom: '15px' }}>
+         <label>Slots mínimos por reserva: </label>
+         <input
+           type="number"
+           name="min_slots_per_booking"
+           value={config.min_slots_per_booking}
+           onChange={handleChange}
+           style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+        />
+       </div>
+       <div style={{ marginBottom: '15px' }}>
+         <label>Slots máximos por reserva: </label>
+         <input
+           type="number"
+           name="max_slots_per_booking"
+           value={config.max_slots_per_booking}
+           onChange={handleChange}
+           style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+         />
+       </div>
+       <div style={{ marginBottom: '15px' }}>
+         <label>Slots máximos por semana: </label>
+         <input
+           type="number"
+           name="weekly_slots_limit"
+           value={config.weekly_slots_limit}
+           onChange={handleChange}
+           style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+         />
+       </div>
+{/* Nuevos parámetros de reservas  */}
+
         <div style={{ marginBottom: '15px' }}>
           <label>
             <input
