@@ -10,7 +10,7 @@ docker run --rm \
   -u "$(id -u):$(id -g)" \
   -v "$PWD":/app \
   -w /app \
-  node:18-alpine \
+  node:20-alpine \
   sh -c "npm install && npm run build"
 
 cd ..
