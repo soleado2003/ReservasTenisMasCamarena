@@ -24,6 +24,7 @@ services:
       - DB_PASSWORD=Reservas1234-
       - DB_DATABASE=reserva_tenis
       - DB_PORT=3306
+      - DB_DIALECT=mysql
     depends_on:
       - mysql
     networks:
