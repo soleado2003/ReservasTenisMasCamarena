@@ -10,7 +10,7 @@ services:
       - ./ReservasMC/dist:/usr/share/nginx/html
     networks:
       - default
-      - npm
+      - proxy_network
 
   backend:
     build: ./backend
@@ -29,7 +29,7 @@ services:
       - mysql
     networks:
       - default
-      - npm
+      - proxy_network
 
   mysql:
     image: mysql:8.0
@@ -54,7 +54,7 @@ volumes:
 networks:
   default:
     name: reservas_network
-  npm:
+  proxy_network:
     external: true
     name: nginx_proxy_manager_ubuntu_default
 
