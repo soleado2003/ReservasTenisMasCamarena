@@ -1,5 +1,21 @@
 
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: reservas_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: reserva_tenis
+      MYSQL_USER: reservas_user
+      MYSQL_PASSWORD: Reservas1234-
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - default
   frontend:
     image: nginx:alpine
     container_name: reservas_frontend
@@ -30,23 +46,6 @@ services:
     networks:
       - default
       - proxy_network
-
-  mysql:
-    image: mysql:8.0
-    container_name: reservas_mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: root1234
-      MYSQL_DATABASE: reserva_tenis
-      MYSQL_USER: reservas_user
-      MYSQL_PASSWORD: Reservas1234-
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - default
 
 volumes:
   mysql_data:
