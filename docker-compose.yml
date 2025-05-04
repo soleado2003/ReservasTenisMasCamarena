@@ -16,18 +16,6 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - default
-  frontend:
-    image: nginx:alpine
-    container_name: reservas_frontend
-    restart: unless-stopped
-    ports:
-      - "8080:80"
-    volumes:
-      - ./ReservasMC/dist:/usr/share/nginx/html
-    networks:
-      - default
-      - proxy_network
-
   backend:
     build: ./backend
     container_name: reservas_backend
@@ -43,6 +31,20 @@ services:
       - DB_DIALECT=mysql
     depends_on:
       - mysql
+    networks:
+      - default
+      - proxy_network
+  frontend:
+    image: nginx:alpine
+    container_name: reservas_frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      - VITE_API_URL=/api 
+      - VITE_API_BASE_URL=/api
+    volumes:
+      - ./ReservasMC/dist:/usr/share/nginx/html
     networks:
       - default
       - proxy_network
