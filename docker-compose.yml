@@ -35,6 +35,8 @@ services:
       - proxy_network
   frontend:
     build: ./ReservasMC
+    arguments:
+      - VITE_API_URL: /api
     container_name: reservas_frontend
     restart: unless-stopped
     ports:
