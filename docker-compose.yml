@@ -1,4 +1,3 @@
-
 services:
   mysql:
     image: mysql:8.0
@@ -35,13 +34,11 @@ services:
       - default
       - proxy_network
   frontend:
-    image: nginx:alpine
+    build: ./ReservasMC
     container_name: reservas_frontend
     restart: unless-stopped
     ports:
       - "8080:80"
-    volumes:
-      - ./ReservasMC/dist:/usr/share/nginx/html
     networks:
       - default
       - proxy_network
