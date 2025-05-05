@@ -80,9 +80,9 @@ exports.createReserva = async (req, res) => {
     // 6) Insertar si pasa todas las validaciones
     await db.query(
       `INSERT INTO Reserva 
-        (user_email, club_cif, pista_id, fecha, horaInicio, horaFin, precio)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [finalEmail, club_cif, pista_id, fecha, horaInicio, horaFin, precio]
+        (user_email, pista_id, fecha, horaInicio, horaFin, precio)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [finalEmail, pista_id, fecha, horaInicio, horaFin, precio]
     );
 
     res.status(201).json({ message: 'Reserva creada exitosamente' });
