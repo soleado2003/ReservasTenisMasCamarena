@@ -58,21 +58,20 @@ function Schedule() {
     try {
       const courtNumber = parseInt(court.replace('Pista ', ''), 10);
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-      const horaFin = `${parseInt(time.split(':')[0]) + 1}:00`;
 
-      await fetchWithToken(`${import.meta.env.VITE_API_URL}/reservas`, {
+      const data = await fetchWithToken(`${import.meta.env.VITE_API_URL}/reservas`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           pista_id: courtNumber,
           fecha: formattedDate,
           horaInicio: time,
-          horaFin: horaFin,
           precio: 4
         })
       });
-      fetchSchedule(selectedDate);
-      alert('Reserva creada con éxito');
+
+      await fetchSchedule(selectedDate); // Wait for the schedule to update
+      alert(data.message || 'Reserva creada con éxito');
     } catch (error) {
       console.error('Error al realizar la reserva:', error);
       const errorMessage = error.message ? ` ${error.message}` : '';

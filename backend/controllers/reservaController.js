@@ -23,75 +23,158 @@ exports.getUserReservas = async (req, res) => {
   }
 };
 
-// controllers/reservaController.js
+// // controllers/reservaController.js
+// exports.createReserva = async (req, res) => {
+//   try {
+//     const { user_email, pista_id, fecha, horaInicio, horaFin, precio } = req.body;
+//     const finalEmail = req.user.admin && user_email ? user_email : req.user.email; //esta linea es para si el usuario es un admin, se puede pasar el email del usuario que hace la reserva, sino se usa el del token
+
+//     // 1) Carga de configuración
+//     const [cfgRows] = await db.query("SELECT * FROM AppConfig LIMIT 1");
+//     if (!cfgRows.length) return res.status(500).json({ message: 'Configuración no encontrada' });
+//     const cfg = cfgRows[0];
+
+//     // 2) Cálculo de slots solicitados
+//     const toMinutes = s => { const [h,m]=s.split(':').map(Number); return h*60+m; };
+//     const slots = (toMinutes(horaFin) - toMinutes(horaInicio)) / 30;
+
+//     // 3) Primera reserva del día: fuerza mínimo
+//     const [{ count: todayCount }] = await db.query(
+//       'SELECT COUNT(*) AS count FROM Reserva WHERE user_email = ? AND fecha = ?',
+//       [finalEmail, fecha]
+//     );
+//     if (todayCount === 0 && slots < cfg.min_slots_per_booking) {
+//       return res.status(400).json({
+//         message: `Para tu primera reserva del día debes reservar al menos ${cfg.min_slots_per_booking * 0.5} hora(s).`
+//       });
+//     }
+
+//     // 4) Validar slots individuales
+//     if (slots < cfg.min_slots_per_booking || slots > cfg.max_slots_per_booking) {
+//       return res.status(400).json({
+//         message: `Cada reserva debe ser de entre ${cfg.min_slots_per_booking * 0.5} y ${cfg.max_slots_per_booking * 0.5} hora(s).`
+//       });
+//     }
+
+//     // 5) Validar límite semanal de slots
+//     const bookingDate = new Date(fecha);
+//     const day = bookingDate.getUTCDay(), diff = (day === 0 ? -6 : 1 - day);
+//     const monday = new Date(bookingDate); monday.setUTCDate(bookingDate.getUTCDate() + diff);
+//     const sunday = new Date(monday); sunday.setUTCDate(monday.getUTCDate() + 6);
+//     const fmt = d => d.toISOString().slice(0,10);
+
+//     const [[{ total_slots }]] = await db.query(
+//       `SELECT 
+//          COALESCE(SUM((TIME_TO_SEC(horaFin)-TIME_TO_SEC(horaInicio))/1800),0) AS total_slots
+//        FROM Reserva
+//        WHERE user_email = ? 
+//          AND fecha BETWEEN ? AND ?`,
+//       [finalEmail, fmt(monday), fmt(sunday)]
+//     );
+//     if (total_slots + slots > cfg.weekly_slots_limit) {
+//       return res.status(400).json({
+//         message: `No puedes reservar más de ${cfg.weekly_slots_limit * 0.5} hora(s) por semana.`
+//       });
+//     }
+
+//     // 6) Insertar si pasa todas las validaciones
+//     await db.query(
+//       `INSERT INTO Reserva 
+//         (user_email, pista_id, fecha, horaInicio, horaFin, precio)
+//        VALUES (?, ?, ?, ?, ?, ?)`,
+//       [finalEmail, pista_id, fecha, horaInicio, horaFin, precio]
+//     );
+
+//     res.status(201).json({ message: 'Reserva creada exitosamente' });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Error al crear la reserva' });
+//   }
+// };
 exports.createReserva = async (req, res) => {
   try {
-    const { user_email, club_cif, pista_id, fecha, horaInicio, horaFin, precio } = req.body;
-    const finalEmail = req.user.admin && user_email ? user_email : req.user.email;
+    const { user_email, pista_id, fecha, horaInicio, horaFin, precio } = req.body;
+    const finalEmail = req.user.admin && user_email ? user_email : req.user.email; //esta linea es para si el usuario es un admin, se puede pasar el email del usuario que hace la reserva, sino se usa el del token
+
+    // 0 Verificar si el usuario está verificado
+    const [userRows] = await db.query('SELECT verificado FROM `User` WHERE email = ?', [finalEmail]);
+    if (userRows.length === 0 || !userRows[0].verificado) {
+      return res.status(422).json({
+        message: 'No puedes reservar pistas hasta que el administrador verifique tu informaciónde registro.'
+      });
+    }
 
     // 1) Carga de configuración
     const [cfgRows] = await db.query("SELECT * FROM AppConfig LIMIT 1");
     if (!cfgRows.length) return res.status(500).json({ message: 'Configuración no encontrada' });
     const cfg = cfgRows[0];
 
-    // 2) Cálculo de slots solicitados
-    const toMinutes = s => { const [h,m]=s.split(':').map(Number); return h*60+m; };
-    const slots = (toMinutes(horaFin) - toMinutes(horaInicio)) / 30;
+    // Validaciones
+    if (!pista_id || !fecha || !horaInicio || !precio) {
+      return res.status(400).json({
+        message: 'Faltan campos requeridos',
+        received: { pista_id, fecha, horaInicio, precio }
+      });
+    }
 
-    // 3) Primera reserva del día: fuerza mínimo
-    const [{ count: todayCount }] = await db.query(
-      'SELECT COUNT(*) AS count FROM Reserva WHERE user_email = ? AND fecha = ?',
+    // Verificar disponibilidad
+    const [existingReserva] = await db.query(
+      'SELECT * FROM Reserva WHERE pista_id = ? AND fecha = ? AND horaInicio = ?',
+      [pista_id, fecha, horaInicio]
+    );
+
+    if (existingReserva.length > 0) {
+      return res.status(409).json({ message: 'La pista ya está reservada para ese horario' });
+    }
+
+    // 2) Validar maximo de slots seguidos
+    const [existingReservasToday] = await db.query(
+      `SELECT 
+         COUNT(*) AS count
+       FROM Reserva
+       WHERE user_email = ? 
+         AND fecha = ?`,
       [finalEmail, fecha]
     );
-    if (todayCount === 0 && slots < cfg.min_slots_per_booking) {
-      return res.status(400).json({
-        message: `Para tu primera reserva del día debes reservar al menos ${cfg.min_slots_per_booking * 0.5} hora(s).`
+
+    if (existingReservasToday[0].count >= cfg.max_slots_per_booking) {
+       return res.status(400).json({
+        message: `No puedes reservar más de ${cfg.max_slots_per_booking * 0.5} hora(s) el mismo dia.`
       });
     }
 
-    // 4) Validar slots individuales
-    if (slots < cfg.min_slots_per_booking || slots > cfg.max_slots_per_booking) {
-      return res.status(400).json({
-        message: `Cada reserva debe ser de entre ${cfg.min_slots_per_booking * 0.5} y ${cfg.max_slots_per_booking * 0.5} hora(s).`
-      });
-    }
-
-    // 5) Validar límite semanal de slots
+    // 3) Validar límite semanal de slots
     const bookingDate = new Date(fecha);
     const day = bookingDate.getUTCDay(), diff = (day === 0 ? -6 : 1 - day);
     const monday = new Date(bookingDate); monday.setUTCDate(bookingDate.getUTCDate() + diff);
-    const sunday = new Date(monday); sunday.setUTCDate(monday.getUTCDate() + 6);
+    const sunday = new Date(bookingDate); sunday.setUTCDate(monday.getUTCDate() + 6);
     const fmt = d => d.toISOString().slice(0,10);
-
-    const [[{ total_slots }]] = await db.query(
-      `SELECT 
-         COALESCE(SUM((TIME_TO_SEC(horaFin)-TIME_TO_SEC(horaInicio))/1800),0) AS total_slots
-       FROM Reserva
-       WHERE user_email = ? 
-         AND fecha BETWEEN ? AND ?`,
+    const [existingReservasWeek] = await db.query(
+      `SELECT COUNT(*) AS count FROM Reserva WHERE user_email = ? AND fecha BETWEEN ? AND ?`,
       [finalEmail, fmt(monday), fmt(sunday)]
     );
-    if (total_slots + slots > cfg.weekly_slots_limit) {
-      return res.status(400).json({
-        message: `No puedes reservar más de ${cfg.weekly_slots_limit * 0.5} hora(s) por semana.`
+
+    if (existingReservasWeek[0].count >= cfg.weekly_slots_limit) {
+       return res.status(400).json({
+        message: `Ya has reservado ${existingReservasWeek[0].count*0.5} horas esta semana. No puedes reservar más de ${cfg.weekly_slots_limit * 0.5} hora(s) por semana.`
       });
     }
 
-    // 6) Insertar si pasa todas las validaciones
+    // Crear la reserva
     await db.query(
-      `INSERT INTO Reserva 
-        (user_email, pista_id, fecha, horaInicio, horaFin, precio)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      'INSERT INTO Reserva (user_email, pista_id, fecha, horaInicio, horaFin, precio) VALUES (?, ?, ?, ?, ?, ?)',
       [finalEmail, pista_id, fecha, horaInicio, horaFin, precio]
     );
-
-    res.status(201).json({ message: 'Reserva creada exitosamente' });
+      
+    res.status(201).json({ message: `Reserva creada correctamente. Has reservado ${(existingReservasWeek[0].count+1) * 0.5} horas esta semana de un máximo de ${cfg.weekly_slots_limit * 0.5} horas.`});
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error al crear la reserva' });
+    console.error('Error en createReserva:', error);
+    res.status(500).json({
+      message: 'Error al crear la reserva',
+      error: error.message
+    });
   }
 };
-
 
 exports.getAllReservas = async (req, res) => {
   // Solo admin

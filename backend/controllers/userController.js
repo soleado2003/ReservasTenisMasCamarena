@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 exports.getProfile = async (req, res) => {
   try {
     const email = req.user.email;
-    const [rows] = await db.query('SELECT email, nombre, descripcion, fotoPerfil, nivelJuego, admin FROM `User` WHERE email = ?', [email]);
+    const [rows] = await db.query('SELECT email, nombre, descripcion, admin FROM `User` WHERE email = ?', [email]);
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
@@ -18,10 +18,10 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const email = req.user.email;
-    const { nombre, descripcion, fotoPerfil, nivelJuego, password } = req.body;
+    const { nombre, descripcion,   password } = req.body;
     
-    let query = 'UPDATE `User` SET nombre = ?, descripcion = ?, fotoPerfil = ?, nivelJuego = ?';
-    let params = [nombre, descripcion, fotoPerfil, nivelJuego];
+    let query = 'UPDATE `User` SET nombre = ?, descripcion = ?';
+    let params = [nombre, descripcion];
     
     // Si se envía una nueva contraseña, la hasheamos
     if (password) {
@@ -47,7 +47,7 @@ exports.getAllUsers = async (req, res) => {
   }
   try {
     const [rows] = await db.query(
-      'SELECT email, nombre, descripcion, fotoPerfil, nivelJuego, admin, verificado, id_ext FROM `User`'
+      'SELECT email, nombre, descripcion, admin, verificado, id_ext FROM `User`'
     );
     res.json(rows);
   } catch (error) {
@@ -62,11 +62,11 @@ exports.updateUserByAdmin = async (req, res) => {
   }
   try {
     const email = req.params.email;
-    const { nombre, descripcion, fotoPerfil, nivelJuego, admin, verificado, id_ext } = req.body;
+    const { nombre, descripcion,   admin, verificado, id_ext } = req.body;
     
     await db.query(
-      'UPDATE `User` SET nombre = ?, descripcion = ?, fotoPerfil = ?, nivelJuego = ?, admin = ?, verificado = ?, id_ext = ? WHERE email = ?',
-      [nombre, descripcion, fotoPerfil, nivelJuego, admin, verificado, id_ext, email]
+      'UPDATE `User` SET nombre = ?, descripcion = ?, admin = ?, verificado = ?, id_ext = ? WHERE email = ?',
+      [nombre, descripcion, admin, verificado, id_ext, email]
     );
     res.json({ message: 'Usuario actualizado' });
   } catch (error) {

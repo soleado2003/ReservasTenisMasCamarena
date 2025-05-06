@@ -1,4 +1,6 @@
 // controllers/configController.js
+const db = require('../config/db');
+
 exports.getConfig = async (req, res) => {
   console.log("dami","aqui")
   try {

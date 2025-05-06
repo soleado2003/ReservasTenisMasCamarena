@@ -1,3 +1,5 @@
+//esta pantalla ya no se usa, pero la dejamos por si acaso. 
+// Ahora para reservar se pincha en un slot libre. (pantalla Schedule.jsx))
 import { useState, useEffect } from 'react';
 import { fetchWithToken } from '../services/api';
 import { format } from 'date-fns';
@@ -62,7 +64,7 @@ function ReservaForm({ onReservaCreada }) {
           })
         }
       );
-      alert('Reserva creada con éxito');
+      alert('Reserva creada con éxito3');
       if (onReservaCreada) onReservaCreada();
     } catch (error) {
       console.error('Error al crear reserva:', error);

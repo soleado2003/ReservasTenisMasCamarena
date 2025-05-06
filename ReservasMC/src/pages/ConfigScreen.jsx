@@ -64,7 +64,7 @@ function ConfigScreen() {
       <h2>Opciones de la Aplicación</h2>
       {message && <p>{message}</p>}
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
+        {/* <div style={{ marginBottom: '15px' }}>
           <label>Horas máximas por día: </label>
           <input
             type="number"
@@ -83,7 +83,7 @@ function ConfigScreen() {
             onChange={handleChange}
             style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
           />
-        </div>
+        </div> */}
 {/* Nuevos parámetros de reservas  */}
        <div style={{ marginBottom: '15px' }}>
          <label>Límite reservas por día: </label>

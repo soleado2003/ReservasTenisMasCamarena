@@ -61,8 +61,6 @@ function AdminPanel() {
     const updatedUser = { 
       nombre: user.nombre, 
       descripcion: user.descripcion, 
-      fotoPerfil: user.fotoPerfil, 
-      nivelJuego: user.nivelJuego,
       admin: user.admin,
       verificado: true, // Marcar como verificado
       id_ext: id_ext
@@ -218,21 +216,7 @@ function AdminPanel() {
                       }}
                     ></textarea>
                   </div>
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Foto Perfil:</label>
-                    <input
-                      type="text"
-                      name="fotoPerfil"
-                      value={editingUser.fotoPerfil || ''}
-                      onChange={handleChange}
-                      style={{
-                        width: '100%',
-                        padding: '8px',
-                        borderRadius: '4px',
-                        border: '1px solid #ccc'
-                      }}
-                    />
-                  </div>
+
                   <div style={{ marginBottom: '15px', display: 'flex', justifyContent: 'space-between' }}>
                     <div style={{ flex: '0 0 48%' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>Admin:</label>
@@ -411,7 +395,6 @@ function AdminPanel() {
                       <th>Pista</th>
                       <th>Fecha</th>
                       <th>Inicio</th>
-                      <th>Fin</th>
                       <th>Precio</th>
                     </tr>
                   </thead>
@@ -422,7 +405,6 @@ function AdminPanel() {
                         <td>{reserva.pista_id}</td>
                         <td>{formatDate(reserva.fecha)}</td>
                         <td>{formatTime(reserva.horaInicio)}</td>
-                        <td>{formatTime(reserva.horaFin)}</td>
                         <td>{reserva.precio}€</td>
                       </tr>
                     ))}
