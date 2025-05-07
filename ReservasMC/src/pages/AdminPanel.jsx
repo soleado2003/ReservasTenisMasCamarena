@@ -111,11 +111,22 @@ function AdminPanel() {
   }, {});
 
   const formatDate = (dateStr) => {
-    return new Intl.DateTimeFormat('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    }).format(new Date(dateStr));
+    console.log('Date string:', dateStr); // Log the date string
+    if (!dateStr) return '-';
+    
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return '-';
+      
+      return new Intl.DateTimeFormat('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      }).format(date);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '-';
+    }
   };
 
   const formatTime = (timeStr) => {
@@ -144,18 +155,36 @@ function AdminPanel() {
                   <th>Admin</th>
                   <th>Verificado</th>
                   <th>Id_ext</th>
+                  <th>Fecha Registro</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map(user => (
-                  <tr key={user.email} onClick={() => handleEditUser(user)} style={{ cursor: 'pointer' }}>
-                    <td>{user.email}</td>
-                    <td>{user.nombre}</td>
-                    <td>{user.admin ? 'Sí' : 'No'}</td>
-                    <td>{user.verificado ? 'Sí' : 'No'}</td>
-                    <td>{user.id_ext || '-'}</td>
-                  </tr>
-                ))}
+                {users
+                  .sort((a, b) => {
+                    // Primero ordenar por verificación (no verificados primero)
+                    if (a.verificado !== b.verificado) {
+                      return a.verificado ? 1 : -1;
+                    }
+                    // Si tienen el mismo estado de verificación, ordenar por nombre
+                    return a.nombre.localeCompare(b.nombre);
+                  })
+                  .map(user => (
+                    <tr 
+                      key={user.email} 
+                      onClick={() => handleEditUser(user)} 
+                      style={{ 
+                        cursor: 'pointer',
+                        backgroundColor: user.verificado ? 'inherit' : '#fff3cd'
+                      }}
+                    >
+                      <td>{user.email}</td>
+                      <td>{user.nombre}</td>
+                      <td>{user.admin ? 'Sí' : 'No'}</td>
+                      <td>{user.verificado ? 'Sí' : 'No'}</td>
+                      <td>{user.id_ext || '-'}</td>
+                      <td>{formatDate(user.fecha_registro)}</td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
             {editingUser && (

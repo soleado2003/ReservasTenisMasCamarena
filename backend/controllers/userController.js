@@ -47,7 +47,17 @@ exports.getAllUsers = async (req, res) => {
   }
   try {
     const [rows] = await db.query(
-      'SELECT email, nombre, descripcion, admin, verificado, id_ext FROM `User`'
+      `
+      SELECT 
+        email, 
+        nombre, 
+        descripcion, 
+        admin, 
+        verificado, 
+        id_ext,
+        fecha_registro 
+      FROM User
+      ORDER BY verificado ASC, nombre ASC`
     );
     res.json(rows);
   } catch (error) {
