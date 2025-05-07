@@ -242,3 +242,97 @@ exports.marcarPagada = async (req, res) => {
     res.status(500).json({ message: 'Error al marcar la reserva como pagada' });
   }
 };
+
+exports.createMasiva = async (req, res) => {
+  const connection = await db.getConnection();
+  
+  try {
+    await connection.beginTransaction();
+    
+    const {
+      fechaInicio,
+      fechaFin,
+      horaInicio,
+      horaFin,
+      diasSemana,
+      tipoReserva,
+      textoReserva,
+      pista_id
+    } = req.body;
+
+    // Convertir fechas a objetos Date
+    const startDate = new Date(fechaInicio);
+    const endDate = new Date(fechaFin);
+    
+    // Array para almacenar todas las fechas que coinciden con los días de la semana seleccionados
+    const fechasReserva = [];
+    const currentDate = new Date(startDate);
+
+    // Iterar por cada día entre las fechas
+    while (currentDate <= endDate) {
+      // Obtener el día de la semana (0 = domingo, 1 = lunes, etc.)
+      const diaSemana = currentDate.getDay();
+      
+      // Verificar si este día de la semana está seleccionado
+      if (diasSemana.includes(diaSemana)) {
+        fechasReserva.push(new Date(currentDate));
+      }
+      
+      // Avanzar al siguiente día
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // Crear las reservas para cada fecha
+    for (const fecha of fechasReserva) {
+      let horaActual = horaInicio;
+      
+      while (horaActual < horaFin) {
+        // Verificar disponibilidad
+        const [existingReserva] = await connection.query(
+          'SELECT id FROM Reserva WHERE pista_id = ? AND fecha = ? AND horaInicio = ? AND fecha_cancelacion IS NULL',
+          [pista_id, fecha.toISOString().split('T')[0], horaActual]
+        );
+
+        if (existingReserva.length === 0) {
+          // Crear la reserva
+          await connection.query(
+            `INSERT INTO Reserva (
+              pista_id, 
+              fecha, 
+              horaInicio, 
+              user_email,
+              tipo_reserva,
+              texto_reserva,
+              precio
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              pista_id,
+              fecha.toISOString().split('T')[0],
+              horaActual,
+              req.user.email,
+              tipoReserva,
+              textoReserva,
+              0 // Precio 0 para reservas administrativas
+            ]
+          );
+        }
+
+        // Avanzar 30 minutos
+        const [hora, minutos] = horaActual.split(':');
+        const tiempo = new Date(2000, 0, 1, Number(hora), Number(minutos));
+        tiempo.setMinutes(tiempo.getMinutes() + 30);
+        horaActual = `${String(tiempo.getHours()).padStart(2, '0')}:${String(tiempo.getMinutes()).padStart(2, '0')}`;
+      }
+    }
+
+    await connection.commit();
+    res.json({ message: 'Reservas creadas correctamente' });
+
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error creating reservas:', error);
+    res.status(500).json({ message: 'Error al crear las reservas' });
+  } finally {
+    connection.release();
+  }
+};

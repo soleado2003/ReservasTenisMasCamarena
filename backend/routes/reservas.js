@@ -8,6 +8,7 @@ router.get('/user', authMiddleware, reservaController.getUserReservas);
 
 // Crear nueva reserva (usuario)
 router.post('/', authMiddleware, reservaController.createReserva);
+router.post('/masiva', authMiddleware, reservaController.createMasiva);
 
 // Gestión de reservas (solo admin)
 router.get('/', authMiddleware, reservaController.getAllReservas);
