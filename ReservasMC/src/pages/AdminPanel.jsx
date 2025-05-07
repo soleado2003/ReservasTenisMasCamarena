@@ -111,7 +111,6 @@ function AdminPanel() {
   }, {});
 
   const formatDate = (dateStr) => {
-    console.log('Date string:', dateStr); // Log the date string
     if (!dateStr) return '-';
     
     try {

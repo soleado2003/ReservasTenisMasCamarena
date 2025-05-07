@@ -7,13 +7,12 @@ exports.getConfig = async (req, res) => {
     if (!rows.length) return res.status(404).json({ message: 'Configuración no encontrada' });
     res.json(rows[0]);
   } catch (error) {
-    console.error(error);
+    console.error('Error getting config:', error);
     res.status(500).json({ message: 'Error al obtener la configuración' });
   }
 };
 
 exports.updateConfig = async (req, res) => {
-
   try {
     const {
       max_hours_day,     // tu campo original
@@ -24,7 +23,8 @@ exports.updateConfig = async (req, res) => {
       weekly_slots_limit,
       send_verification_email,
       registration_text,
-      verification_email_text
+      verification_email_text,
+      notification_email
     } = req.body;
 
 
@@ -35,12 +35,12 @@ exports.updateConfig = async (req, res) => {
         `INSERT INTO AppConfig 
           (max_hours_day, max_hours_week,
            daily_bookings_limit, min_slots_per_booking, max_slots_per_booking, weekly_slots_limit,
-           send_verification_email, registration_text, verification_email_text)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           send_verification_email, registration_text, verification_email_text,notification_email)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           max_hours_day, max_hours_week,
           daily_bookings_limit, min_slots_per_booking, max_slots_per_booking, weekly_slots_limit,
-          send_verification_email, registration_text, verification_email_text
+          send_verification_email, registration_text, verification_email_text, notification_email
         ]
       );
     } else {
@@ -55,19 +55,20 @@ exports.updateConfig = async (req, res) => {
            weekly_slots_limit    = ?,
            send_verification_email = ?,
            registration_text       = ?,
-           verification_email_text = ?
+           verification_email_text = ?,
+           notification_email     = ?
          WHERE id = ?`,
         [
           max_hours_day, max_hours_week,
           daily_bookings_limit, min_slots_per_booking, max_slots_per_booking, weekly_slots_limit,
-          send_verification_email, registration_text, verification_email_text,
+          send_verification_email, registration_text, verification_email_text,notification_email,
           rows[0].id
         ]
       );
     }
-    res.json({ message: 'Configuración actualizada' });
+    res.json({ message: 'Configuración actualizada correctamente' });
   } catch (error) {
-    console.error(error);
+    console.error('Error updating config:', error);
     res.status(500).json({ message: 'Error al actualizar la configuración' });
   }
 };

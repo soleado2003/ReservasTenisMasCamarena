@@ -122,8 +122,8 @@ function Schedule() {
       setSelectedUser(null);
       setIsPaid(false); // Reset payment status
     } catch (error) {
-      console.error('Error al realizar la reserva:', error);
-      alert('Error al realizar la reserva');
+      const errorMessage = error.message ? ` ${error.message}` : '';
+      alert(`Error al realizar la reserva: ${errorMessage}`);
     }
   };
 

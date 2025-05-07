@@ -2,6 +2,7 @@ const db = require('../config/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
+const { sendEmail } = require('../services/emailService'); // Asegúrate de tener este servicio
 
 exports.register = async (req, res) => {
   try {
@@ -59,10 +60,31 @@ exports.register = async (req, res) => {
       ? configRows[0].registration_text 
       : 'Usuario registrado exitosamente';
     
+    // Get notification email from config
+    const [configRowsEmail] = await db.query('SELECT notification_email FROM AppConfig LIMIT 1');
+    const notificationEmail = configRowsEmail[0]?.notification_email;
+
+    if (notificationEmail) {
+      try {
+        // Send notification email
+        await sendEmail({
+          to: notificationEmail,
+          subject: 'Nuevo usuario registrado',
+          text: `Un nuevo usuario se ha registrado en el sistema:
+                 Email: ${email}
+                 Nombre: ${nombre}
+                 Fecha: ${new Date().toLocaleString()}`
+        });
+      } catch (emailError) {
+        // Log the error but don't stop the registration process
+        console.error('Error sending notification email:', emailError);
+      }
+    }
+
     res.status(201).json({ message: registrationText });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error en el registro del usuario' });
+    console.error('Error en registro:', error);
+    res.status(500).json({ message: 'Error al registrar usuario' });
   }
 };
 

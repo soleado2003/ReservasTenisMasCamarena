@@ -13,7 +13,8 @@ function ConfigScreen() {
        // resto de configuraciones
        send_verification_email: false,
        registration_text: '',
-       verification_email_text: ''
+       verification_email_text: '',
+       notification_email: '',
   });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -157,6 +158,23 @@ function ConfigScreen() {
             rows="3"
             style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
           ></textarea>
+        </div>
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', marginBottom: '5px' }}>
+            Email para notificaciones:
+          </label>
+          <input
+            type="email"
+            name="notification_email"
+            value={config.notification_email || ''}
+            onChange={handleChange}
+            style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '4px',
+              border: '1px solid #ccc'
+            }}
+          />
         </div>
         <button
           type="submit"
