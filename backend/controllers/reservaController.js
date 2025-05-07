@@ -27,8 +27,11 @@ exports.getUserReservas = async (req, res) => {
 
 exports.createReserva = async (req, res) => {
   try {
-    const { user_email, pista_id, fecha, horaInicio, horaFin, precio } = req.body;
-    const finalEmail = req.user.admin && user_email ? user_email : req.user.email; //esta linea es para si el usuario es un admin, se puede pasar el email del usuario que hace la reserva, sino se usa el del token
+    const { pista_id, fecha, horaInicio, precio, user_email, pagada } = req.body;
+    
+    // Si el usuario es admin y proporciona un user_email, usar ese email
+    // Si no, usar el email del usuario que hace la petición
+    const finalEmail = (req.user.admin && user_email) ? user_email : req.user.email;
 
     // 0 Verificar si el usuario está verificado
     const [userRows] = await db.query('SELECT verificado FROM `User` WHERE email = ?', [finalEmail]);
@@ -101,8 +104,15 @@ exports.createReserva = async (req, res) => {
 
     // Crear la reserva
     await db.query(
-      'INSERT INTO Reserva (user_email, pista_id, fecha, horaInicio, horaFin, precio) VALUES (?, ?, ?, ?, ?, ?)',
-      [finalEmail, pista_id, fecha, horaInicio, horaFin, precio]
+      `INSERT INTO Reserva (
+        pista_id, 
+        fecha, 
+        horaInicio, 
+        user_email, 
+        precio,
+        pagada
+      ) VALUES (?, ?, ?, ?, ?, ?)`,
+      [pista_id, fecha, horaInicio, finalEmail, precio, pagada || false]
     );
       
     res.status(201).json({ message: `Reserva creada correctamente. Has reservado ${(existingReservasWeek[0].count+1) * 0.5} horas esta semana de un máximo de ${cfg.weekly_slots_limit * 0.5} horas.`});

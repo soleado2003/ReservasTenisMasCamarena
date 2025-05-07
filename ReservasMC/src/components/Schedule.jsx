@@ -32,6 +32,14 @@ function Schedule() {
   
   const courts = ['Pista 1', 'Pista 2', 'Pista 3'];
 
+  // Añadir estos estados nuevos
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [tempReservation, setTempReservation] = useState(null);
+  // Add new state for payment status
+  const [isPaid, setIsPaid] = useState(false);
+
   useEffect(() => {
     fetchSchedule(selectedDate);
   }, [selectedDate]);
@@ -50,15 +58,50 @@ function Schedule() {
     }
   };
 
+  // Añadir esta función para cargar usuarios
+  const fetchUsers = async () => {
+    try {
+      const data = await fetchWithToken(`${import.meta.env.VITE_API_URL}/users`);
+      
+      // Filter only verified users and sort by name
+      const verifiedUsers = data
+        .filter(user => user.verificado)
+        .sort((a, b) => a.nombre.localeCompare(b.nombre));
+      setUsers(verifiedUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      alert('Error al cargar la lista de usuarios');
+    }
+  };
+
+  // Modificar la función handleReservar
   const handleReservar = async (court, time) => {
     if (!user) {
       navigate('/login');
       return;
     }
-    try {
-      const courtNumber = parseInt(court.replace('Pista ', ''), 10);
-      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
 
+    const courtNumber = parseInt(court.replace('Pista ', ''), 10);
+    
+    if (user.admin) {
+      // Si es admin, guardar los datos de la reserva temporalmente y mostrar el modal
+      setTempReservation({
+        courtNumber,
+        time,
+        date: selectedDate
+      });
+      await fetchUsers(); // Cargar la lista de usuarios
+      setShowUserModal(true);
+    } else {
+      // Si no es admin, proceder con la reserva normal
+      createReservation(courtNumber, time, user.email);
+    }
+  };
+
+  // Añadir esta función para crear la reserva
+  const createReservation = async (courtNumber, time, userEmail) => {
+    try {
+      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       const data = await fetchWithToken(`${import.meta.env.VITE_API_URL}/reservas`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -66,16 +109,21 @@ function Schedule() {
           pista_id: courtNumber,
           fecha: formattedDate,
           horaInicio: time,
-          precio: 4
+          precio: 4,
+          user_email: userEmail,
+          pagada: isPaid // Add the payment status
         })
       });
 
-      await fetchSchedule(selectedDate); // Wait for the schedule to update
+      await fetchSchedule(selectedDate);
       alert(data.message || 'Reserva creada con éxito');
+      setShowUserModal(false);
+      setTempReservation(null);
+      setSelectedUser(null);
+      setIsPaid(false); // Reset payment status
     } catch (error) {
       console.error('Error al realizar la reserva:', error);
-      const errorMessage = error.message ? ` ${error.message}` : '';
-      alert(`Error al realizar la reserva. Por favor, inténtelo de nuevo.${errorMessage}`);
+      alert('Error al realizar la reserva');
     }
   };
 
@@ -182,7 +230,7 @@ function Schedule() {
                         )
                       ) : (
                         // Reservado por otro
-                        <span className="ocupado">Ocupado</span>
+                        <span className="ocupado">{booking.texto_reserva || 'Ocupado'}</span>
                       )
                     ) : (
                       // Slot libre
@@ -204,6 +252,115 @@ function Schedule() {
           ))}
         </tbody>
       </table>
+
+      {showUserModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            width: '400px',
+            maxWidth: '90%'
+          }}>
+            <h3>Seleccionar usuario para la reserva</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <select
+                value={selectedUser || ''}
+                onChange={(e) => setSelectedUser(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  marginBottom: '15px',
+                  borderRadius: '4px',
+                  border: '1px solid #ccc'
+                }}
+              >
+                <option value="">Seleccione un usuario</option>
+                {users
+                  .sort((a, b) => a.nombre.localeCompare(b.nombre))
+                  .map(user => (
+                    <option key={user.email} value={user.email}>
+                      {user.nombre} ({user.email})
+                    </option>
+                ))}
+              </select>
+            </div>
+            
+            <div style={{ 
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              <input
+                type="checkbox"
+                id="pagada"
+                checked={isPaid}
+                onChange={(e) => setIsPaid(e.target.checked)}
+                style={{ marginRight: '8px' }}
+              />
+              <label htmlFor="pagada">Marcar como pagada</label>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: '10px'
+            }}>
+              <button
+                onClick={() => {
+                  if (selectedUser && tempReservation) {
+                    createReservation(
+                      tempReservation.courtNumber,
+                      tempReservation.time,
+                      selectedUser
+                    );
+                  }
+                }}
+                disabled={!selectedUser}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: selectedUser ? '#007bff' : '#ccc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: selectedUser ? 'pointer' : 'not-allowed'
+                }}
+              >
+                Confirmar
+              </button>
+              <button
+                onClick={() => {
+                  setShowUserModal(false);
+                  setTempReservation(null);
+                  setSelectedUser(null);
+                  setIsPaid(false); // Reset payment status when closing
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
