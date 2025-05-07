@@ -2,7 +2,6 @@
 const db = require('../config/db');
 
 exports.getConfig = async (req, res) => {
-  console.log("dami","aqui")
   try {
     const [rows] = await db.query("SELECT * FROM AppConfig LIMIT 1");
     if (!rows.length) return res.status(404).json({ message: 'Configuración no encontrada' });

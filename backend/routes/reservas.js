@@ -12,7 +12,9 @@ router.post('/', authMiddleware, reservaController.createReserva);
 // Gestión de reservas (solo admin)
 router.get('/', authMiddleware, reservaController.getAllReservas);
 router.put('/:id', authMiddleware, reservaController.updateReserva);
-router.delete('/:id', authMiddleware, reservaController.deleteReserva);
+router.delete('/:id', authMiddleware, reservaController.cancelReserva);
+router.put('/:id/cancel', authMiddleware, reservaController.cancelReserva);
+router.put('/:id/pagar', authMiddleware, reservaController.marcarPagada);
 
 // Obtener el horario (público)
 router.get('/schedule', reservaController.getSchedule);

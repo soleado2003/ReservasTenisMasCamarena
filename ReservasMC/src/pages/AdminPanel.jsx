@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchWithToken } from '../services/api';
-import ConfigScreen from './ConfigScreen'; // Importa la nueva pantalla de configuración
+import ConfigScreen from './ConfigScreen';
+import ReservaMasiva from '../components/ReservaMasiva'; // Add this import
 
 function AdminPanel() {
   const [activeTab, setActiveTab] = useState('users');
@@ -129,6 +130,7 @@ function AdminPanel() {
         <button onClick={() => { setActiveTab('pistas'); setEditingUser(null); }}>Pistas</button>
         <button onClick={() => { setActiveTab('reservas'); setEditingUser(null); }}>Reservas</button>
         <button onClick={() => setActiveTab('config')}>Opciones</button>
+        <button onClick={() => setActiveTab('reservaMasiva')}>Reserva Masiva</button>
       </div>
       <div>
         {activeTab === 'users' && (
@@ -416,6 +418,12 @@ function AdminPanel() {
         )}
         {activeTab === 'config' && (
           <ConfigScreen />
+        )}
+        {activeTab === 'reservaMasiva' && (
+          <div>
+            <h2>Reserva Masiva</h2>
+            <ReservaMasiva />
+          </div>
         )}
       </div>
     </div>
