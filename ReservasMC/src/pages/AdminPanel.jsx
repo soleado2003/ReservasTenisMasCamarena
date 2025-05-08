@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { fetchWithToken } from '../services/api';
 import ConfigScreen from './ConfigScreen';
-import ReservaMasiva from '../components/ReservaMasiva'; // Add this import
+import ReservaMasiva from '../components/ReservaMasiva';
+import ReservaList from '../components/ReservaList';
 
 function AdminPanel() {
   const [activeTab, setActiveTab] = useState('users');
@@ -148,10 +149,19 @@ function AdminPanel() {
         <button onClick={() => { setActiveTab('users'); setEditingUser(null); }}>Usuarios</button>
         <button onClick={() => { setActiveTab('pistas'); setEditingUser(null); }}>Pistas</button>
         <button onClick={() => { setActiveTab('reservas'); setEditingUser(null); }}>Reservas</button>
+        <button onClick={() => setActiveTab('misReservas')}>Mis Reservas</button>
         <button onClick={() => setActiveTab('config')}>Opciones</button>
         <button onClick={() => setActiveTab('reservaMasiva')}>Reserva Masiva</button>
       </div>
+
       <div>
+        {activeTab === 'misReservas' && (
+          <div>
+            <h2>Mis Reservas</h2>
+            <ReservaList />
+          </div>
+        )}
+
         {activeTab === 'users' && (
           <div>
             <h2>Usuarios</h2>

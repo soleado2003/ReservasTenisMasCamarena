@@ -8,6 +8,8 @@ import AdminPanel from './pages/AdminPanel';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { UserProvider, useUser } from './context/UserContext';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 
 function PrivateRoute({ children }) {
   const { user } = useUser();
@@ -27,6 +29,8 @@ function App() {
             <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
             <Route path="/reservas" element={<PrivateRoute><Reservas /></PrivateRoute>} />
             <Route path="/admin" element={<PrivateRoute><AdminPanel /></PrivateRoute>} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>

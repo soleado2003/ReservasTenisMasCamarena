@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { login as authLogin } from '../services/auth';
 import { useUser } from '../context/UserContext';
 
@@ -49,6 +49,11 @@ function LoginForm() {
         />
       </div>
       {error && <div style={{ color: 'red' }}>{error}</div>}
+      <div style={{ marginTop: '10px', textAlign: 'right' }}>
+        <Link to="/forgot-password" style={{ color: '#007bff', textDecoration: 'none' }}>
+          ¿Olvidaste tu contraseña?
+        </Link>
+      </div>
       <button type="submit">Iniciar Sesión</button>
     </form>
   );

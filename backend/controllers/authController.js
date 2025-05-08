@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const { sendEmail } = require('../services/emailService'); // Asegúrate de tener este servicio
+const crypto = require('crypto');
 
 exports.register = async (req, res) => {
   try {
@@ -127,5 +128,101 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error en el inicio de sesión' });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Check if user exists
+    const [user] = await db.query('SELECT * FROM User WHERE email = ?', [email]);
+    if (user.length === 0) {
+      return res.status(404).json({ message: 'No existe un usuario con ese email' });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+
+    // Save reset token in database
+    await db.query(
+      'UPDATE User SET reset_token = ?, reset_token_expiry = ? WHERE email = ?',
+      [resetToken, resetTokenExpiry, email]
+    );
+
+    // Construir URL absoluta usando el origin del frontend si está disponible
+    let baseUrl = req.headers.origin;
+    if (!baseUrl) {
+      // Fallback por si la petición viene de Postman o similar
+      baseUrl = 'http://localhost:5173';
+    }
+    const resetUrl = `${baseUrl}/reset-password/${resetToken}`;
+
+    // Send reset email with better formatting
+    await sendEmail({
+      to: email,
+      subject: 'Recuperación de contraseña',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Recuperación de contraseña</h2>
+          <p>Has solicitado restablecer tu contraseña.</p>
+          <p>Haz clic en el siguiente enlace para crear una nueva contraseña:</p>
+          <div style="text-align: center; margin: 20px 0;">
+            <a href="${resetUrl}" 
+               style="background-color: #007bff; 
+                      color: white; 
+                      padding: 12px 24px; 
+                      text-decoration: none; 
+                      border-radius: 4px; 
+                      display: inline-block;">
+              Restablecer contraseña
+            </a>
+          </div>
+          <p style="color: #666; font-size: 14px;">Este enlace expirará en 1 hora.</p>
+          <p style="color: #666; font-size: 14px;">Si no has solicitado cambiar tu contraseña, puedes ignorar este correo.</p>
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          <p style="color: #999; font-size: 12px;">Si el botón no funciona, copia y pega este enlace en tu navegador:</p>
+          <p style="color: #999; font-size: 12px; word-break: break-all;">${resetUrl}</p>
+        </div>
+      `
+    });
+
+    res.json({ message: 'Se ha enviado un email con las instrucciones' });
+  } catch (error) {
+    console.error('Error en forgot password:', error);
+    res.status(500).json({ message: 'Error al procesar la solicitud' });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    // Find user with valid reset token
+    const [users] = await db.query(
+      'SELECT * FROM User WHERE reset_token = ? AND reset_token_expiry > NOW()',
+      [token]
+    );
+
+    if (users.length === 0) {
+      return res.status(400).json({ 
+        message: 'El enlace para restablecer la contraseña es inválido o ha expirado' 
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Update password and clear reset token
+    await db.query(
+      'UPDATE User SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE email = ?',
+      [hashedPassword, users[0].email]
+    );
+
+    res.json({ message: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    console.error('Error en reset password:', error);
+    res.status(500).json({ message: 'Error al restablecer la contraseña' });
   }
 };

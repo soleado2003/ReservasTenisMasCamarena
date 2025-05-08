@@ -6,6 +6,52 @@ import { es } from 'date-fns/locale';
 import { fetchWithToken } from '../services/api';
 import '../styles/Schedule.css';
 
+// Agrupa reservas consecutivas de la escuela por pista
+function groupEscuelaBookings(schedule, timeSlots, courts) {
+  const grouped = {};
+  for (const court of courts) {
+    const courtNumber = parseInt(court.replace('Pista ', ''), 10);
+    grouped[courtNumber] = [];
+    let i = 0;
+    while (i < timeSlots.length) {
+      const booking = schedule.find(
+        b => Number(b.court) === courtNumber && b.time === timeSlots[i]
+      );
+      if (
+        booking &&
+        booking.tipo_reserva === 'escuela'
+      ) {
+        // Comenzar agrupación
+        let start = i;
+        let end = i;
+        // Buscar hasta dónde llega el bloque consecutivo
+        while (
+          end + 1 < timeSlots.length &&
+          schedule.find(
+            b =>
+              Number(b.court) === courtNumber &&
+              b.time === timeSlots[end + 1] &&
+              b.tipo_reserva === 'escuela'
+          )
+        ) {
+          end++;
+        }
+        grouped[courtNumber].push({
+          start,
+          end,
+          booking: booking,
+        });
+        i = end + 1;
+      } else {
+        i++;
+      }
+    }
+  }
+  return grouped;
+}
+
+const AGRUPAR_ESCUELA = true; // Cambia a false para desactivar la agrupación
+
 function Schedule() {
   const [schedule, setSchedule] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -197,6 +243,10 @@ function Schedule() {
 
   if (loading) return <div>Cargando horarios...</div>;
 
+  const groupedEscuela = AGRUPAR_ESCUELA
+    ? groupEscuelaBookings(schedule, timeSlots, courts)
+    : {};
+
   return (
     <div className="schedule">
       <div className="schedule-header">
@@ -224,52 +274,66 @@ function Schedule() {
           </tr>
         </thead>
         <tbody>
-          {timeSlots.map(time => (
+          {timeSlots.map((time, rowIdx) => (
             <tr key={time}>
               <td>{time}</td>
-              {courts.map(court => {
+              {courts.map((court, courtIdx) => {
                 const courtNumber = parseInt(court.replace('Pista ', ''), 10);
-                // Buscar si hay una reserva en ese slot (el backend ya filtra por fecha)
+
+                if (AGRUPAR_ESCUELA) {
+                  // --- AGRUPADO ---
+                  const escuelaBlock = groupedEscuela[courtNumber]?.find(
+                    block => block.start === rowIdx
+                  );
+                  const isInEscuelaBlock = groupedEscuela[courtNumber]?.some(
+                    block => rowIdx > block.start && rowIdx <= block.end
+                  );
+                  if (isInEscuelaBlock) return null;
+                  if (escuelaBlock) {
+                    return (
+                      <td
+                        key={`${court}-${time}`}
+                        rowSpan={escuelaBlock.end - escuelaBlock.start + 1}
+                        className="escuela-booking"
+                        style={{
+                          backgroundColor: '#ffeeba',
+                          color: '#856404',
+                          fontWeight: 'bold',
+                          textAlign: 'center',
+                          verticalAlign: 'middle'
+                        }}
+                      >
+                        {escuelaBlock.booking.texto_reserva || 'Escuela'}
+                      </td>
+                    );
+                  }
+                }
+
+                // --- NO AGRUPADO ---
                 const booking = schedule.find(
                   b => Number(b.court) === courtNumber && b.time === time
                 );
-
                 return (
-                  <td 
+                  <td
                     key={`${court}-${time}`}
                     className={booking ? 'booked' : 'available'}
                   >
-                    {booking ? (
-                      user && booking.user_email === user.email ? (
-                        // Es la reserva hecha por el usuario logueado
-                        isFutureReservation(selectedDate, time) ? (
-                          <button 
-                            onClick={() => handleCancelarReserva(booking.id)}
-                            className="btn-cancelar"
-                          >
-                            Cancelar
-                          </button>
-                        ) : (
-                          //reservado por mi pero ya ha pasado
-                          <span className="anterior">Reservado</span>
+                    {booking
+                      ? (booking.tipo_reserva === 'escuela'
+                          ? (AGRUPAR_ESCUELA ? null : (booking.texto_reserva || 'Escuela'))
+                          : (user && booking.user_email === user.email
+                              ? (isFutureReservation(selectedDate, time)
+                                  ? <button onClick={() => handleCancelarReserva(booking.id)} className="btn-cancelar">Cancelar</button>
+                                  : <span className="anterior">Reservado</span>
+                                )
+                            : <span className="ocupado">{booking.texto_reserva || 'Ocupado'}</span>
+                          )
+                      )
+                      : (canMakeReservation(selectedDate, time)
+                          ? <button onClick={() => handleReservar(court, time)} className="btn-reservar">Reservar</button>
+                          : <span className="anterior">Libre</span>
                         )
-                      ) : (
-                        // Reservado por otro
-                        <span className="ocupado">{booking.texto_reserva || 'Ocupado'}</span>
-                      )
-                    ) : (
-                      // Slot libre
-                      canMakeReservation(selectedDate, time) ? (
-                        <button 
-                          onClick={() => handleReservar(court, time)}
-                          className="btn-reservar"
-                        >
-                          Reservar
-                        </button>
-                      ) : (
-                        <span className="anterior">Libre</span>
-                      )
-                    )}
+                    }
                   </td>
                 );
               })}
