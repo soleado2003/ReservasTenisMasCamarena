@@ -23,14 +23,19 @@ function App() {
         <Navbar />
         <main>
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            {/* Rutas específicas primero */}
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
             <Route path="/reservas" element={<PrivateRoute><Reservas /></PrivateRoute>} />
             <Route path="/admin" element={<PrivateRoute><AdminPanel /></PrivateRoute>} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            
+            {/* Ruta home */}
+            <Route path="/" element={<Home />} />
+            
+            {/* Ruta catch-all siempre al final */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
