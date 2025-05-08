@@ -28,11 +28,6 @@ services:
       - DB_DATABASE=reserva_tenis
       - DB_PORT=3306
       - DB_DIALECT=mysql
-      # Email Configuration
-      - SMTP_HOST=smtp.gmail.com
-      - SMTP_PORT=587
-      - SMTP_USER=reservasmascamarena@gmail.com
-      - SMTP_PASS=rxpvllyzsglpwimg
     depends_on:
       - mysql
     networks:
