@@ -87,7 +87,16 @@ function AdminPanel() {
       await fetchWithToken(`${import.meta.env.VITE_API_URL}/users/${editingUser.email}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingUser)
+        body: JSON.stringify({
+          nombre: editingUser.nombre,
+          apellidos: editingUser.apellidos,
+          telefono: editingUser.telefono,
+          direccion: editingUser.direccion,
+          numero: editingUser.numero,
+          puerta: editingUser.puerta,
+          verificado: editingUser.verificado,
+          id_ext: editingUser.id_ext
+        })
       });
       setEditingUser(null);
       fetchUsers();
@@ -232,62 +241,83 @@ function AdminPanel() {
                     />
                   </div>
                   <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Descripción:</label>
-                    <textarea
-                      name="descripcion"
-                      value={editingUser.descripcion || ''}
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Apellidos:</label>
+                    <input
+                      type="text"
+                      name="apellidos"
+                      value={editingUser.apellidos || ''}
                       onChange={handleChange}
-                      rows="3"
                       style={{
                         width: '100%',
                         padding: '8px',
                         borderRadius: '4px',
                         border: '1px solid #ccc'
                       }}
-                    ></textarea>
+                    />
                   </div>
-
-                  <div style={{ marginBottom: '15px', display: 'flex', justifyContent: 'space-between' }}>
-                    <div style={{ flex: '0 0 48%' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>Admin:</label>
-                      <select
-                        name="admin"
-                        value={editingUser.admin ? '1' : '0'}
-                        onChange={(e) =>
-                          setEditingUser({ ...editingUser, admin: e.target.value === '1' })
-                        }
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Teléfono:</label>
+                    <input
+                      type="text"
+                      name="telefono"
+                      value={editingUser.telefono || ''}
+                      onChange={handleChange}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc'
+                      }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Dirección:</label>
+                    <input
+                      type="text"
+                      name="direccion"
+                      value={editingUser.direccion || ''}
+                      onChange={handleChange}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc'
+                      }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: '15px', display: 'flex', gap: '15px' }}>
+                    <div style={{ flex: '1' }}>
+                      <label style={{ display: 'block', marginBottom: '5px' }}>Número:</label>
+                      <input
+                        type="text"
+                        name="numero"
+                        value={editingUser.numero || ''}
+                        onChange={handleChange}
                         style={{
                           width: '100%',
                           padding: '8px',
                           borderRadius: '4px',
                           border: '1px solid #ccc'
                         }}
-                      >
-                        <option value="0">No</option>
-                        <option value="1">Sí</option>
-                      </select>
+                      />
                     </div>
-                    <div style={{ flex: '0 0 48%' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>Verificado:</label>
-                      <select
-                        name="verificado"
-                        value={editingUser.verificado ? '1' : '0'}
-                        onChange={(e) =>
-                          setEditingUser({ ...editingUser, verificado: e.target.value === '1' })
-                        }
+                    <div style={{ flex: '1' }}>
+                      <label style={{ display: 'block', marginBottom: '5px' }}>Puerta:</label>
+                      <input
+                        type="text"
+                        name="puerta"
+                        value={editingUser.puerta || ''}
+                        onChange={handleChange}
                         style={{
                           width: '100%',
                           padding: '8px',
                           borderRadius: '4px',
                           border: '1px solid #ccc'
                         }}
-                      >
-                        <option value="0">No</option>
-                        <option value="1">Sí</option>
-                      </select>
+                      />
                     </div>
                   </div>
-                  <div style={{ marginBottom: '20px' }}>
+                  <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', marginBottom: '5px' }}>Id_ext:</label>
                     <input
                       type="text"
@@ -301,6 +331,25 @@ function AdminPanel() {
                         border: '1px solid #ccc'
                       }}
                     />
+                  </div>
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Verificado:</label>
+                    <select
+                      name="verificado"
+                      value={editingUser.verificado ? '1' : '0'}
+                      onChange={(e) =>
+                        setEditingUser({ ...editingUser, verificado: e.target.value === '1' })
+                      }
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc'
+                      }}
+                    >
+                      <option value="0">No</option>
+                      <option value="1">Sí</option>
+                    </select>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <button

@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 exports.getProfile = async (req, res) => {
   try {
     const email = req.user.email;
-    const [rows] = await db.query('SELECT email, nombre, descripcion, admin FROM `User` WHERE email = ?', [email]);
+    const [rows] = await db.query('SELECT email, nombre, apellidos, telefono, direccion, numero, puerta, admin, verificado, id_ext, fecha_registro FROM `User` WHERE email = ?', [email]);
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
@@ -49,13 +49,17 @@ exports.getAllUsers = async (req, res) => {
     const [rows] = await db.query(
       `
       SELECT 
-        email, 
-        nombre, 
-        descripcion, 
-        admin, 
-        verificado, 
+        email,
+        nombre,
+        apellidos,
+        telefono,
+        direccion,
+        numero,
+        puerta,
+        admin,
+        verificado,
         id_ext,
-        fecha_registro 
+        fecha_registro
       FROM User
       ORDER BY verificado ASC, nombre ASC`
     );
@@ -72,12 +76,30 @@ exports.updateUserByAdmin = async (req, res) => {
   }
   try {
     const email = req.params.email;
-    const { nombre, descripcion,   admin, verificado, id_ext } = req.body;
-    
-    await db.query(
-      'UPDATE `User` SET nombre = ?, descripcion = ?, admin = ?, verificado = ?, id_ext = ? WHERE email = ?',
-      [nombre, descripcion, admin, verificado, id_ext, email]
+    const {
+      nombre,
+      apellidos,
+      telefono,
+      direccion,
+      numero,
+      puerta,
+      verificado,
+      id_ext
+    } = req.body;
+    await db.query(`
+      UPDATE User 
+      SET nombre = ?,
+          apellidos = ?,
+          telefono = ?,
+          direccion = ?,
+          numero = ?,
+          puerta = ?,
+          verificado = ?,
+          id_ext = ?
+      WHERE email = ?`,
+      [nombre, apellidos, telefono, direccion, numero, puerta, verificado, id_ext, email]
     );
+    console.log('Usuario actualizado:', email);
     res.json({ message: 'Usuario actualizado' });
   } catch (error) {
     console.error(error);
