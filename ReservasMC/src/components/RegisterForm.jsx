@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { register } from '../services/auth';
+import '../styles/RegisterForm.css'; // Crearemos este archivo
 
 function RegisterForm() {
   const [email, setEmail] = useState('');
@@ -48,102 +49,100 @@ function RegisterForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label>Email:</label>
-        <input 
-          type="email" 
-          value={email} 
-          onChange={(e)=> setEmail(e.target.value)} 
-          required 
-        />
-      </div>
+    <div className="register-container">
+      <h2>Registro de Usuario</h2>
+      <form onSubmit={handleSubmit} className="register-form">
+        <div className="form-grid">
+          <div className="form-group">
+            <label>Email:</label>
+            <input 
+              type="email" 
+              value={email} 
+              onChange={(e)=> setEmail(e.target.value)} 
+              required 
+            />
+          </div>
 
-      <div>
-        <label>Nombre:</label>
-        <input 
-          type="text" 
-          value={nombre} 
-          onChange={(e)=> setNombre(e.target.value)} 
-          required 
-        />
-      </div>
+          <div className="form-group">
+            <label>Nombre:</label>
+            <input 
+              type="text" 
+              value={nombre} 
+              onChange={(e)=> setNombre(e.target.value)} 
+              required 
+            />
+          </div>
 
-      <div>
-        <label>Apellidos:</label>
-        <input 
-          type="text" 
-          value={apellidos} 
-          onChange={(e)=> setApellidos(e.target.value)} 
-        />
-      </div>
+          <div className="form-group">
+            <label>Apellidos:</label>
+            <input 
+              type="text" 
+              value={apellidos} 
+              onChange={(e)=> setApellidos(e.target.value)} 
+            />
+          </div>
 
-      <div>
-        <label>Teléfono:</label>
-        <input 
-          type="text" 
-          value={telefono} 
-          onChange={(e)=> setTelefono(e.target.value)} 
-        />
-      </div>
+          <div className="form-group">
+            <label>Teléfono:</label>
+            <input 
+              type="tel"
+              pattern="[0-9]*" 
+              value={telefono} 
+              onChange={(e)=> setTelefono(e.target.value)} 
+            />
+          </div>
 
-      <div>
-        <label>Dirección:</label>
-        <input 
-          type="text" 
-          value={direccion} 
-          onChange={(e)=> setDireccion(e.target.value)} 
-        />
-      </div>
+          <div className="form-group full-width">
+            <label>Dirección:</label>
+            <input 
+              type="text" 
+              value={direccion} 
+              onChange={(e)=> setDireccion(e.target.value)} 
+            />
+          </div>
 
-      <div>
-        <label>Número:</label>
-        <input 
-          type="number" 
-          value={numero} 
-          onChange={(e)=> setNumero(e.target.value)} 
-        />
-      </div>
+          <div className="form-group">
+            <label>Número:</label>
+            <input 
+              type="number" 
+              value={numero} 
+              onChange={(e)=> setNumero(e.target.value)} 
+            />
+          </div>
 
-      <div>
-        <label>Puerta:</label>
-        <input 
-          type="text" 
-          value={puerta} 
-          onChange={(e)=> setPuerta(e.target.value)} 
-        />
-      </div>
+          <div className="form-group">
+            <label>Puerta:</label>
+            <input 
+              type="text" 
+              value={puerta} 
+              onChange={(e)=> setPuerta(e.target.value)} 
+            />
+          </div>
 
-      <div>
-        <label>Descripción:</label>
-        <textarea 
-          value={descripcion} 
-          onChange={(e)=> setDescripcion(e.target.value)}
-        />
-      </div>
+          <div className="form-group">
+            <label>Contraseña:</label>
+            <input 
+              type="password" 
+              value={password} 
+              onChange={(e)=> setPassword(e.target.value)} 
+              required 
+            />
+          </div>
 
-      <div>
-        <label>Contraseña:</label>
-        <input 
-          type="password" 
-          value={password} 
-          onChange={(e)=> setPassword(e.target.value)} 
-          required 
-        />
-      </div>
+          <div className="form-group">
+            <label>Confirmar Contraseña:</label>
+            <input 
+              type="password" 
+              value={confirmPassword} 
+              onChange={(e)=> setConfirmPassword(e.target.value)} 
+              required 
+            />
+          </div>
+        </div>
 
-      <div>
-        <label>Confirmar Contraseña:</label>
-        <input 
-          type="password" 
-          value={confirmPassword} 
-          onChange={(e)=> setConfirmPassword(e.target.value)} 
-          required 
-        />
-      </div>
-
-      <button type="submit">Registrarse</button>
-    </form>
+        <button type="submit" className="submit-button">Registrarse</button>
+      </form>
+    </div>
   );
 }
 

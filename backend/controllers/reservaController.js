@@ -222,13 +222,39 @@ exports.getSchedule = async (req, res) => {
 // Añadir método para cancelar reserva
 exports.cancelReserva = async (req, res) => {
   try {
-    const { id } = req.params;
-    await db.query(
-      `UPDATE Reserva 
-       SET fecha_cancelacion = CURRENT_TIMESTAMP 
-       WHERE id = ?`,
-      [id]
+    const reservaId = req.params.id;
+    
+    // First get the reservation details
+    const [reserva] = await db.query(
+      'SELECT fecha, horaInicio FROM Reserva WHERE id = ?',
+      [reservaId]
     );
+
+    if (!reserva.length) {
+      return res.status(404).json({ message: 'Reserva no encontrada' });
+    }
+
+    // Calculate if there's less than 1 hour until reservation starts
+    const now = new Date();
+    const reservaDate = new Date(reserva[0].fecha);
+    const [hours, minutes] = reserva[0].horaInicio.split(':');
+    reservaDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    
+    const diffInMilliseconds = reservaDate - now;
+    const diffInHours = diffInMilliseconds / (1000 * 60 * 60);
+
+    if (diffInHours < 1) {
+      return res.status(400).json({ 
+        message: 'No se puede cancelar una reserva con menos de 1 hora de antelación' 
+      });
+    }
+
+    // If validation passes, proceed with cancellation
+    await db.query(
+      'UPDATE Reserva SET fecha_cancelacion = NOW() WHERE id = ?',
+      [reservaId]
+    );
+
     res.json({ message: 'Reserva cancelada correctamente' });
   } catch (error) {
     console.error('Error al cancelar la reserva:', error);

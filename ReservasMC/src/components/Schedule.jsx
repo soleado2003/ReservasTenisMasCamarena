@@ -130,20 +130,32 @@ function Schedule() {
   const handleCancelarReserva = async (reservaId) => {
     if (window.confirm('¿Estás seguro de que quieres cancelar esta reserva?')) {
       try {
-        await fetchWithToken(`${import.meta.env.VITE_API_URL}/reservas/${reservaId}`, {
+        const response = await fetchWithToken(`${import.meta.env.VITE_API_URL}/reservas/${reservaId}`, {
           method: 'DELETE'
         });
+        
+        // if (!response.ok) {
+        //   const error = await response.json();
+        //   throw new Error(error.message);
+        // }
+        
         fetchSchedule(selectedDate);
       } catch (error) {
         console.error('Error al cancelar la reserva:', error);
-        alert('Error al cancelar la reserva');
+        alert(error.message || 'Error al cancelar la reserva');
       }
     }
   };
 
   const handleDateChange = (event) => {
-    const [year, month, day] = event.target.value.split('-').map(Number);
-    setSelectedDate(new Date(year, month - 1, day));
+    const selectedValue = event.target.value;
+    const maxDate = getMaxDate();
+    const minDate = format(new Date(), 'yyyy-MM-dd');
+
+    if (selectedValue >= minDate && selectedValue <= maxDate) {
+      const [year, month, day] = selectedValue.split('-').map(Number);
+      setSelectedDate(new Date(year, month - 1, day));
+    }
   };
 
   const isFutureReservation = (fecha, horaInicio) => {
@@ -176,6 +188,13 @@ function Schedule() {
     return isAfter(reservationDate, now);
   };
 
+  // Añadir función para calcular el último día del mes siguiente
+  const getMaxDate = () => {
+    const today = new Date();
+    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0); // El 0 nos da el último día del mes anterior
+    return format(nextMonth, 'yyyy-MM-dd');
+  };
+
   if (loading) return <div>Cargando horarios...</div>;
 
   return (
@@ -186,6 +205,12 @@ function Schedule() {
           value={format(selectedDate, 'yyyy-MM-dd')}
           onChange={handleDateChange}
           min={format(new Date(), 'yyyy-MM-dd')}
+          max={getMaxDate()} // Añadir límite máximo
+          style={{
+            padding: '8px',
+            borderRadius: '4px',
+            border: '1px solid #ccc'
+          }}
         />
         <h3>{format(selectedDate, "EEEE d 'de' MMMM 'de' yyyy", { locale: es })}</h3>
       </div>
