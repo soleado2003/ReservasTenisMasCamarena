@@ -81,6 +81,8 @@ exports.createReserva = async (req, res) => {
       });
     }
 
+    // Después de la validación del máximo de slots por día
+    
     // 3) Validar límite semanal de slots
     const bookingDate = new Date(fecha);
     const day = bookingDate.getUTCDay(), diff = (day === 0 ? -6 : 1 - day);
@@ -114,6 +116,44 @@ exports.createReserva = async (req, res) => {
       ) VALUES (?, ?, ?, ?, ?, ?)`,
       [pista_id, fecha, horaInicio, finalEmail, precio, pagada || false]
     );
+    //Intenta reserva del siguiente slot
+    if (existingReservasToday[0].count === 0) { //se pone 0 porque está calculado antes de hacer la 1ª reserva
+      // Calcular el siguiente slot
+      const [hours, minutes] = horaInicio.split(':');
+      const nextSlotTime = new Date(2000, 0, 1, Number(hours), Number(minutes));
+      nextSlotTime.setMinutes(nextSlotTime.getMinutes() + 30);
+      const nextSlot = `${String(nextSlotTime.getHours()).padStart(2, '0')}:${String(nextSlotTime.getMinutes()).padStart(2, '0')}`;
+
+      // Verificar que no supera el último slot permitido (ejemplo: 21:30)
+      if (nextSlot <= '21:30') {
+        // Verificar disponibilidad del siguiente slot
+        const [nextSlotReserva] = await db.query(
+          'SELECT * FROM Reserva WHERE pista_id = ? AND fecha = ? AND horaInicio = ? AND fecha_cancelacion IS NULL',
+          [pista_id, fecha, nextSlot]
+        );
+
+        if (nextSlotReserva.length === 0) {
+          // El siguiente slot está disponible, crear ambas reservas
+          await db.query(
+            `INSERT INTO Reserva (
+              pista_id, 
+              fecha, 
+              horaInicio, 
+              user_email, 
+              precio,
+              pagada
+            ) VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+              pista_id, fecha, nextSlot, finalEmail, precio, pagada || false
+            ]
+          );
+          
+          return res.status(201).json({ 
+            message: `Se ha reservado 1 hora que es lo mínimo: ${horaInicio} y ${nextSlot}. Llevas reservadas ${(existingReservasWeek[0].count+2) * 0.5} horas esta semana de un máximo de ${cfg.weekly_slots_limit * 0.5} horas.`
+          });
+        }
+      }
+    }
       
     res.status(201).json({ message: `Reserva creada correctamente. Has reservado ${(existingReservasWeek[0].count+1) * 0.5} horas esta semana de un máximo de ${cfg.weekly_slots_limit * 0.5} horas.`});
   } catch (error) {
@@ -171,28 +211,28 @@ exports.updateReserva = async (req, res) => {
   }
 };
 
-exports.deleteReserva = async (req, res) => { //Este ya no se usa, se usa el de cancelar reserva
-  try {
-    const id = req.params.id;
-    // First check if the reservation belongs to the user
-    const [reserva] = await db.query('SELECT * FROM Reserva WHERE id = ?', [id]);
+// exports.deleteReserva = async (req, res) => { //Este ya no se usa, se usa el de cancelar reserva
+//   try {
+//     const id = req.params.id;
+//     // First check if the reservation belongs to the user
+//     const [reserva] = await db.query('SELECT * FROM Reserva WHERE id = ?', [id]);
     
-    if (reserva.length === 0) {
-      return res.status(404).json({ message: 'Reserva no encontrada' });
-    }
+//     if (reserva.length === 0) {
+//       return res.status(404).json({ message: 'Reserva no encontrada' });
+//     }
 
-    // Allow deletion if user is admin or if the reservation belongs to the user
-    if (!req.user.admin && reserva[0].user_email !== req.user.email) {
-      return res.status(403).json({ message: 'Acceso denegado' });
-    }
+//     // Allow deletion if user is admin or if the reservation belongs to the user
+//     if (!req.user.admin && reserva[0].user_email !== req.user.email) {
+//       return res.status(403).json({ message: 'Acceso denegado' });
+//     }
 
-    await db.query('DELETE FROM Reserva WHERE id = ?', [id]);
-    res.json({ message: 'Reserva eliminada exitosamente' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error al eliminar la reserva' });
-  }
-};
+//     await db.query('DELETE FROM Reserva WHERE id = ?', [id]);
+//     res.json({ message: 'Reserva eliminada exitosamente' });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Error al eliminar la reserva' });
+//   }
+// };
 
 // Modificar la consulta en getSchedule
 exports.getSchedule = async (req, res) => {
@@ -224,9 +264,9 @@ exports.cancelReserva = async (req, res) => {
   try {
     const reservaId = req.params.id;
     
-    // First get the reservation details
+    // Obtener detalles de la reserva
     const [reserva] = await db.query(
-      'SELECT fecha, horaInicio FROM Reserva WHERE id = ?',
+      'SELECT fecha, horaInicio, user_email, pista_id FROM Reserva WHERE id = ?',
       [reservaId]
     );
 
@@ -234,7 +274,7 @@ exports.cancelReserva = async (req, res) => {
       return res.status(404).json({ message: 'Reserva no encontrada' });
     }
 
-    // Calculate if there's less than 1 hour until reservation starts
+    // Validar tiempo de cancelación
     const now = new Date();
     const reservaDate = new Date(reserva[0].fecha);
     const [hours, minutes] = reserva[0].horaInicio.split(':');
@@ -249,13 +289,35 @@ exports.cancelReserva = async (req, res) => {
       });
     }
 
-    // If validation passes, proceed with cancellation
-    await db.query(
-      'UPDATE Reserva SET fecha_cancelacion = NOW() WHERE id = ?',
-      [reservaId]
+    // Calcular 2 slots antes y 2 slots después
+    const currentTime = new Date(2000, 0, 1, parseInt(hours), parseInt(minutes));
+    
+    // Retroceder 60 minutos (2 slots de 30 min)
+    currentTime.setMinutes(currentTime.getMinutes() - 60);
+    const twoSlotsBack = `${String(currentTime.getHours()).padStart(2, '0')}:${String(currentTime.getMinutes()).padStart(2, '0')}`;
+    
+    // Avanzar 120 minutos (4 slots de 30 min) para llegar a 2 slots después del original
+    currentTime.setMinutes(currentTime.getMinutes() + 120);
+    const twoSlotsForward = `${String(currentTime.getHours()).padStart(2, '0')}:${String(currentTime.getMinutes()).padStart(2, '0')}`;
+
+    // Cancelar la reserva y hasta 2 slots consecutivos antes y después
+    const [result] = await db.query(
+      `UPDATE Reserva 
+       SET fecha_cancelacion = NOW() 
+       WHERE fecha = ? 
+       AND user_email = ?
+       AND pista_id = ?
+       AND horaInicio BETWEEN ? AND ?
+       AND fecha_cancelacion IS NULL`,
+      [reserva[0].fecha, reserva[0].user_email, reserva[0].pista_id, twoSlotsBack, twoSlotsForward]
     );
 
-    res.json({ message: 'Reserva cancelada correctamente' });
+    const slotsAfectados = result.affectedRows;
+    const mensaje = slotsAfectados > 1 
+      ? `Se han cancelado ${slotsAfectados} reservas consecutivas correctamente` 
+      : 'Se ha cancelado la reserva correctamente';
+
+    res.json({ message: mensaje });
   } catch (error) {
     console.error('Error al cancelar la reserva:', error);
     res.status(500).json({ message: 'Error al cancelar la reserva' });
