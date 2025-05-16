@@ -55,6 +55,18 @@ function ReservaMasiva() {
     }
   };
 
+  // Añadir función para calcular la fecha máxima (4 meses desde hoy)
+  const getMaxDate = () => {
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + 4);
+    return maxDate.toISOString().split('T')[0];
+  };
+
+  // Añadir función para calcular la fecha mínima (hoy)
+  const getMinDate = () => {
+    return new Date().toISOString().split('T')[0];
+  };
+
   return (
     <div>
       <form onSubmit={handleSubmit}>
@@ -83,6 +95,8 @@ function ReservaMasiva() {
                 type="date"
                 value={fechaInicio}
                 onChange={(e) => setFechaInicio(e.target.value)}
+                min={getMinDate()}
+                max={getMaxDate()}
                 required
                 style={{
                   width: '100%',
@@ -104,6 +118,8 @@ function ReservaMasiva() {
                 type="date"
                 value={fechaFin}
                 onChange={(e) => setFechaFin(e.target.value)}
+                min={fechaInicio || getMinDate()}
+                max={getMaxDate()}
                 required
                 style={{
                   width: '100%',

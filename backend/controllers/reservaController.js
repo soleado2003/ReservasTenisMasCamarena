@@ -296,6 +296,27 @@ exports.createMasiva = async (req, res) => {
       pista_id
     } = req.body;
 
+    // Validación de fechas (4 meses máximo)
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + 4);
+    maxDate.setHours(23, 59, 59, 999);
+
+    const fechaInicioDate = new Date(fechaInicio);
+    const fechaFinDate = new Date(fechaFin);
+
+    if (fechaInicioDate > maxDate || fechaFinDate > maxDate) {
+      return res.status(400).json({
+        message: 'No se pueden crear reservas más allá de 4 meses desde hoy'
+      });
+    }
+
+    // Validación de fecha inicial anterior a fecha final
+    if (fechaInicioDate > fechaFinDate) {
+      return res.status(400).json({
+        message: 'La fecha inicial no puede ser posterior a la fecha final'
+      });
+    }
+
     // Convertir fechas a objetos Date
     const startDate = new Date(fechaInicio);
     const endDate = new Date(fechaFin);
@@ -366,8 +387,11 @@ exports.createMasiva = async (req, res) => {
 
   } catch (error) {
     await connection.rollback();
-    console.error('Error creating reservas:', error);
-    res.status(500).json({ message: 'Error al crear las reservas' });
+    console.error('Error al crear reservas masivas:', error);
+    res.status(500).json({ 
+      message: 'Error al crear las reservas',
+      error: error.message 
+    });
   } finally {
     connection.release();
   }
