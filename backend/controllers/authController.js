@@ -7,7 +7,6 @@ const crypto = require('crypto');
 
 exports.register = async (req, res) => {
   try {
-    // Añade los nuevos campos a la desestructuración
     const {
       email,
       nombre,
@@ -16,31 +15,33 @@ exports.register = async (req, res) => {
       direccion,
       numero,
       puerta,
+      descripcion,
       password,
-      descripcion
+      id_ext,
+      relacion = 'Titular', // Valor por defecto
+      forma_pago = 'Pago en Oficina (Efectivo o tarjeta)' // Valor por defecto
     } = req.body;
 
     // Comprueba campos obligatorios
     if (!email || !nombre || !password) {
       return res.status(400).json({ message: 'Faltan campos obligatorios' });
     }
-    
+
     // Verificar si el usuario ya existe
     const [existingUser] = await db.query('SELECT * FROM `User` WHERE email = ?', [email]);
     if (existingUser.length > 0) {
-      return res.status(400).json({ message: 'El usuario ya existe' });
+      return res.status(400).json({ message: 'El email ya está registrado' });
     }
-    
-    // Hashear la contraseña
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    
-    // Insertar el usuario con verificado en false por defecto
+
+    // Hash de la contraseña
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insertar usuario incluyendo los nuevos campos
     await db.query(
       `INSERT INTO \`User\` (
-        email, nombre, apellidos, telefono, direccion, numero, puerta, password, descripcion, verificado
+        email, nombre, apellidos, telefono, direccion, numero, puerta, password, descripcion, verificado, id_ext, relacion, forma_pago
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         email,
         nombre,
@@ -51,7 +52,10 @@ exports.register = async (req, res) => {
         puerta || '',
         hashedPassword,
         descripcion || '',
-        false
+        false,
+        id_ext || null,
+        relacion,
+        forma_pago
       ]
     );
     
