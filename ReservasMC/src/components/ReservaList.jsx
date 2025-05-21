@@ -87,7 +87,6 @@ function ReservaList() {
             <th>Pista</th>
             <th>Fecha</th>
             <th>Hora Inicio</th>
-            <th>Hora Fin</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -104,7 +103,6 @@ function ReservaList() {
                 })() : 'No disponible'}
               </td>
               <td>{reserva.horaInicio ? reserva.horaInicio.slice(0, 5) : 'No disponible'}</td>
-              <td>{reserva.horaFin ? reserva.horaFin.slice(0, 5) : 'No disponible'}</td>
               <td>
                 {isFutureReservation(reserva.fecha, reserva.horaInicio) ? (
                   <button 

@@ -20,6 +20,7 @@ function AdminPanel() {
   const [pistas, setPistas] = useState([]);
   const [reservas, setReservas] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
+  const [selectedReserva, setSelectedReserva] = useState(null);
   const today = new Date().toISOString().split('T')[0]; // Obtener la fecha de hoy en formato YYYY-MM-DD
   const [startDate, setStartDate] = useState(today); // Inicializar con la fecha de hoy
   const [endDate, setEndDate] = useState(today); // Inicializar con la fecha de hoy
@@ -188,6 +189,22 @@ function AdminPanel() {
 
   const formatTime = (timeStr) => {
     return timeStr.substring(0, 5); // Toma solo HH:mm
+  };
+
+  const handleTogglePagada = async (reservaId, pagada) => {
+    try {
+      await fetchWithToken(`${import.meta.env.VITE_API_URL}/reservas/${reservaId}/pagar`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pagada })
+      });
+      
+      // Actualiza la lista de reservas
+      await fetchReservas();
+    } catch (error) {
+      console.error('Error al actualizar el estado de pago:', error);
+      alert('Error al actualizar el estado de pago');
+    }
   };
 
   return (
@@ -539,43 +556,135 @@ function AdminPanel() {
               </div>
             </div>
 
-            {Object.entries(groupedReservas).map(([userEmail, reservas]) => (
-              <div key={userEmail} style={{ marginBottom: '30px' }}>
-                <h3 style={{ 
-                  borderBottom: '2px solid #007BFF', 
-                  paddingBottom: '10px',
-                  marginBottom: '15px' 
-                }}>
-                  Usuario: {userEmail}
-                  <span style={{ float: 'right' }}>
-                    Total reservas: {reservas.length} - 
-                    Importe total: {reservas.reduce((sum, r) => sum + parseFloat(r.precio || 0), 0)}€
-                  </span>
-                </h3>
-                <table style={{ width: '100%', marginBottom: '20px' }}>
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Pista</th>
-                      <th>Fecha</th>
-                      <th>Inicio</th>
-                      <th>Precio</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reservas.map(reserva => (
-                      <tr key={reserva.id}>
-                        <td>{reserva.id}</td>
-                        <td>{reserva.pista_id}</td>
-                        <td>{formatDate(reserva.fecha)}</td>
-                        <td>{formatTime(reserva.horaInicio)}</td>
-                        <td>{reserva.precio}€</td>
+            {Object.entries(groupedReservas).map(([userEmail, reservas]) => {
+              // Encontrar el usuario correspondiente para obtener el id_ext
+              const usuario = users.find(u => u.email === userEmail);
+              const id_ext = usuario ? usuario.id_ext : '-';
+
+              return (
+                <div key={userEmail} style={{ marginBottom: '30px' }}>
+                  <h3 style={{ 
+                    borderBottom: '2px solid #007BFF', 
+                    paddingBottom: '10px',
+                    marginBottom: '15px' 
+                  }}>
+                    <span style={{ marginRight: '10px' }}>
+                      Socio: {id_ext}
+                    </span>
+                    <span style={{ color: '#666', fontSize: '0.8em' }}>
+                      {userEmail}
+                    </span>
+                    <span style={{ float: 'right' }}>
+                      Reservas: {reservas.length} - 
+                      Importe: {reservas.reduce((sum, r) => sum + parseFloat(r.precio || 0), 0)}€
+                    </span>
+                  </h3>
+                  <table style={{ width: '100%', marginBottom: '20px' }}>
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Pista</th>
+                        <th>Fecha</th>
+                        <th>Inicio</th>
+                        <th>Precio</th>
+                        <th>Pagada</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {reservas.map(reserva => (
+                        <tr key={reserva.id}>
+                          <td>{reserva.id}</td>
+                          <td>{reserva.pista_id}</td>
+                          <td>{formatDate(reserva.fecha)}</td>
+                          <td>{formatTime(reserva.horaInicio)}</td>
+                          <td>{reserva.precio}€</td>
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={reserva.pagada || false}
+                              onChange={(e) => {
+                                e.stopPropagation(); // Evitar que se propague el evento al tr
+                                handleTogglePagada(reserva.id, !reserva.pagada);
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })}
+
+            {selectedReserva && (
+              <div
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  height: '100vh',
+                  width: '100vw',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  zIndex: 1000,
+                  padding: '20px',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <div
+                  style={{
+                    backgroundColor: '#fff',
+                    borderRadius: '8px',
+                    padding: '30px',
+                    width: '400px',
+                    maxWidth: '100%',
+                    boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
+                  }}
+                >
+                  <h3 style={{ marginBottom: '20px', textAlign: 'center' }}>
+                    Reserva ID: {selectedReserva.id}
+                  </h3>
+                  <p>Pista: {selectedReserva.pista_id}</p>
+                  <p>Fecha: {formatDate(selectedReserva.fecha)}</p>
+                  <p>Inicio: {formatTime(selectedReserva.horaInicio)}</p>
+                  <p>Precio: {selectedReserva.precio}€</p>
+                  <p>Pagada: {selectedReserva.pagada ? 'Sí' : 'No'}</p>
+                  <button
+                    onClick={() =>
+                      handleTogglePagada(selectedReserva.id, !selectedReserva.pagada)
+                    }
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '4px',
+                      backgroundColor: '#007BFF',
+                      color: '#fff',
+                      border: 'none',
+                      cursor: 'pointer',
+                      marginBottom: '10px',
+                      width: '100%'
+                    }}
+                  >
+                    {selectedReserva.pagada ? 'Desmarcar como pagada' : 'Marcar como pagada'}
+                  </button>
+                  <button
+                    onClick={() => setSelectedReserva(null)}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '4px',
+                      backgroundColor: '#6c757d',
+                      color: '#fff',
+                      border: 'none',
+                      cursor: 'pointer',
+                      width: '100%'
+                    }}
+                  >
+                    Cerrar
+                  </button>
+                </div>
               </div>
-            ))}
+            )}
           </div>
         )}
         {activeTab === 'config' && (

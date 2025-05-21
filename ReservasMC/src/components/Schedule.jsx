@@ -155,7 +155,7 @@ function Schedule() {
           pista_id: courtNumber,
           fecha: formattedDate,
           horaInicio: time,
-          precio: 4,
+          precio: 2, //TODO: Cambiar por el precio real
           user_email: userEmail,
           pagada: isPaid // Add the payment status
         })

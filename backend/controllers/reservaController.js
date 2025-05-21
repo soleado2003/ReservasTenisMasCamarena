@@ -266,16 +266,21 @@ exports.cancelReserva = async (req, res) => {
 exports.marcarPagada = async (req, res) => {
   try {
     const { id } = req.params;
+    const { pagada } = req.body;
+
     await db.query(
       `UPDATE Reserva 
-       SET pagada = TRUE 
+       SET pagada = ? 
        WHERE id = ?`,
-      [id]
+      [pagada, id]
     );
-    res.json({ message: 'Reserva marcada como pagada' });
+    
+    res.json({ 
+      message: pagada ? 'Reserva marcada como pagada' : 'Reserva marcada como no pagada' 
+    });
   } catch (error) {
-    console.error('Error al marcar la reserva como pagada:', error);
-    res.status(500).json({ message: 'Error al marcar la reserva como pagada' });
+    console.error('Error al actualizar el estado de pago:', error);
+    res.status(500).json({ message: 'Error al actualizar el estado de pago' });
   }
 };
 
