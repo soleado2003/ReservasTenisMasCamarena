@@ -4,14 +4,26 @@ import ConfigScreen from './ConfigScreen';
 import ReservaMasiva from '../components/ReservaMasiva';
 import ReservaList from '../components/ReservaList';
 
+const SECTORES = [
+  'ADRIANA', 'ARBOLEDA', 'C.P I', 'C.P II', 'C.P.III', 
+  'ESM.I', 'ESM.II', 'ESM.IV', 'ESM.V', 'ESM.VI', 'ESM.VII',
+  'FUENTES', 'J.C.I', 'J.C.II', 'J.C.III', 'LOS ALTOS',
+  'MONTEBELLO', 'OASIS', 'PARCELAS', 
+  'SECTOR A', 'SECTOR B', 'SECTOR C', 'SECTOR D',
+  'SECTOR E', 'SECTOR F', 'SECTOR G', 'SECTOR H', 'SECTOR J',
+  'VILLAS I', 'VILLAS II', 'VILLAS III'
+];
+
 function AdminPanel() {
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
   const [pistas, setPistas] = useState([]);
   const [reservas, setReservas] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const today = new Date().toISOString().split('T')[0]; // Obtener la fecha de hoy en formato YYYY-MM-DD
+  const [startDate, setStartDate] = useState(today); // Inicializar con la fecha de hoy
+  const [endDate, setEndDate] = useState(today); // Inicializar con la fecha de hoy
+  const [sortConfig, setSortConfig] = useState({ key: 'verificado', direction: 'asc' });
 
   const fetchUsers = async () => {
     try {
@@ -38,7 +50,14 @@ function AdminPanel() {
         url += `?start_date=${startDate}&end_date=${endDate}`;
       }
       const data = await fetchWithToken(url);
-      setReservas(data);
+
+      // Filtrar reservas excluyendo las canceladas (fechaCancelacion definida)
+      const filteredReservas = data.filter(reserva => {
+        const user = users.find(u => u.email === reserva.user_email);
+        return user && !user.admin && (!reserva.fecha_cancelacion || reserva.fecha_cancelacion === null);
+      });
+
+      setReservas(filteredReservas);
     } catch (error) {
       console.error('Error al obtener reservas:', error);
     }
@@ -96,7 +115,9 @@ function AdminPanel() {
           numero: editingUser.numero,
           puerta: editingUser.puerta,
           verificado: editingUser.verificado,
-          id_ext: editingUser.id_ext
+          id_ext: editingUser.id_ext,
+          relacion: editingUser.relacion,
+          forma_pago: editingUser.forma_pago
         })
       });
       setEditingUser(null);
@@ -110,6 +131,33 @@ function AdminPanel() {
     const { name, value } = e.target;
     setEditingUser({ ...editingUser, [name]: value });
   };
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedUsers = [...users].sort((a, b) => {
+    let aValue = a[sortConfig.key];
+    let bValue = b[sortConfig.key];
+
+    // Convertir `id_ext` a número para ordenación numérica
+    if (sortConfig.key === 'id_ext') {
+      aValue = aValue ? parseInt(aValue, 10) : 0;
+      bValue = bValue ? parseInt(bValue, 10) : 0;
+    }
+
+    if (aValue < bValue) {
+      return sortConfig.direction === 'asc' ? -1 : 1;
+    }
+    if (aValue > bValue) {
+      return sortConfig.direction === 'asc' ? 1 : -1;
+    }
+    return 0;
+  });
 
   const groupedReservas = reservas.reduce((groups, reserva) => {
     const key = reserva.user_email;
@@ -168,41 +216,30 @@ function AdminPanel() {
             <table>
               <thead>
                 <tr>
-                  <th>Email</th>
-                  <th>Nombre</th>
-                  <th>Admin</th>
-                  <th>Verificado</th>
-                  <th>Id_ext</th>
-                  <th>Fecha Registro</th>
+                  <th onClick={() => handleSort('email')} style={{ cursor: 'pointer' }}>Email</th>
+                  <th onClick={() => handleSort('nombre')} style={{ cursor: 'pointer' }}>Nombre</th>
+                  <th onClick={() => handleSort('verificado')} style={{ cursor: 'pointer' }}>Verificado</th>
+                  <th onClick={() => handleSort('id_ext')} style={{ cursor: 'pointer' }}>Id_ext</th>
+                  <th onClick={() => handleSort('fecha_registro')} style={{ cursor: 'pointer' }}>Fecha Registro</th>
                 </tr>
               </thead>
               <tbody>
-                {users
-                  .sort((a, b) => {
-                    // Primero ordenar por verificación (no verificados primero)
-                    if (a.verificado !== b.verificado) {
-                      return a.verificado ? 1 : -1;
-                    }
-                    // Si tienen el mismo estado de verificación, ordenar por nombre
-                    return a.nombre.localeCompare(b.nombre);
-                  })
-                  .map(user => (
-                    <tr 
-                      key={user.email} 
-                      onClick={() => handleEditUser(user)} 
-                      style={{ 
-                        cursor: 'pointer',
-                        backgroundColor: user.verificado ? 'inherit' : '#fff3cd'
-                      }}
-                    >
-                      <td>{user.email}</td>
-                      <td>{user.nombre}</td>
-                      <td>{user.admin ? 'Sí' : 'No'}</td>
-                      <td>{user.verificado ? 'Sí' : 'No'}</td>
-                      <td>{user.id_ext || '-'}</td>
-                      <td>{formatDate(user.fecha_registro)}</td>
-                    </tr>
-                  ))}
+                {sortedUsers.map(user => (
+                  <tr 
+                    key={user.email} 
+                    onClick={() => handleEditUser(user)} 
+                    style={{ 
+                      cursor: 'pointer',
+                      backgroundColor: user.verificado ? 'inherit' : '#fff3cd'
+                    }}
+                  >
+                    <td>{user.email}</td>
+                    <td>{user.nombre}</td>
+                    <td>{user.verificado ? 'Sí' : 'No'}</td>
+                    <td>{user.id_ext || '-'}</td>
+                    <td>{formatDate(user.fecha_registro)}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
             {editingUser && (
@@ -281,6 +318,28 @@ function AdminPanel() {
                     />
                   </div>
                   <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Sector:</label>
+                    <select
+                      name="direccion"
+                      value={editingUser.direccion || ''}
+                      onChange={handleChange}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc'
+                      }}
+                    >
+                      <option value="">Seleccione un sector</option>
+                      {SECTORES.map((sector) => (
+                        <option key={sector} value={sector}>
+                          {sector}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', marginBottom: '5px' }}>Dirección:</label>
                     <input
                       type="text"
@@ -328,7 +387,7 @@ function AdminPanel() {
                     </div>
                   </div>
                   <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Id_ext:</label>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Nsocio:</label>
                     <input
                       type="text"
                       name="id_ext"
@@ -343,13 +402,11 @@ function AdminPanel() {
                     />
                   </div>
                   <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Verificado:</label>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Relación:</label>
                     <select
-                      name="verificado"
-                      value={editingUser.verificado ? '1' : '0'}
-                      onChange={(e) =>
-                        setEditingUser({ ...editingUser, verificado: e.target.value === '1' })
-                      }
+                      name="relacion"
+                      value={editingUser.relacion || 'Titular'}
+                      onChange={handleChange}
                       style={{
                         width: '100%',
                         padding: '8px',
@@ -357,8 +414,26 @@ function AdminPanel() {
                         border: '1px solid #ccc'
                       }}
                     >
-                      <option value="0">No</option>
-                      <option value="1">Sí</option>
+                      <option value="Titular">Titular</option>
+                      <option value="Familiar">Familiar</option>
+                      <option value="Inquilino">Inquilino</option>
+                    </select>
+                  </div>
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Forma de Pago:</label>
+                    <select
+                      name="forma_pago"
+                      value={editingUser.forma_pago || 'Pago en Oficina (Efectivo o tarjeta)'}
+                      onChange={handleChange}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc'
+                      }}
+                    >
+                      <option value="Pago en Oficina (Efectivo o tarjeta)">Pago en Oficina (Efectivo o tarjeta)</option>
+                      <option value="Recibo mensual (Domiciliacion)">Recibo mensual (Domiciliacion)</option>
                     </select>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
