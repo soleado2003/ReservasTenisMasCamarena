@@ -62,7 +62,7 @@ function ConfigScreen() {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h2>Opciones de la Aplicación</h2>
+
       {message && <p>{message}</p>}
       <form onSubmit={handleSubmit}>
         {/* <div style={{ marginBottom: '15px' }}>

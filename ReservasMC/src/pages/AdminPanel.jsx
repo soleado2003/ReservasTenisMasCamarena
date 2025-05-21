@@ -209,35 +209,65 @@ function AdminPanel() {
 
   return (
     <div>
-      <h1>Panel de Administración</h1>
-      <div>
-        <button onClick={() => { setActiveTab('users'); setEditingUser(null); }}>Usuarios</button>
-        <button onClick={() => { setActiveTab('pistas'); setEditingUser(null); }}>Pistas</button>
-        <button onClick={() => { setActiveTab('reservas'); setEditingUser(null); }}>Reservas</button>
-        <button onClick={() => setActiveTab('misReservas')}>Mis Reservas</button>
-        <button onClick={() => setActiveTab('config')}>Opciones</button>
-        <button onClick={() => setActiveTab('reservaMasiva')}>Reserva Masiva</button>
+      <h2>Panel de Administración</h2>
+      <div style={{
+        display: 'flex',
+        gap: '5px',
+        padding: '5px 0',
+        borderBottom: '2px solid #e0e0e0',
+        marginBottom: '10px'
+      }}>
+        {[
+          { id: 'users', label: 'Usuarios' },
+          { id: 'pistas', label: 'Pistas' },
+          { id: 'reservas', label: 'Reservas' },
+          { id: 'misReservas', label: 'Mis Reservas' },
+          { id: 'config', label: 'Opciones' },
+          { id: 'reservaMasiva', label: 'Reserva Masiva' }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => {
+              setActiveTab(tab.id);
+              if (tab.id !== 'misReservas') setEditingUser(null);
+            }}
+            style={{
+              padding: '10px 20px',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              backgroundColor: activeTab === tab.id ? '#4D897D' : '#f8f9fa',
+              color: activeTab === tab.id ? 'white' : '#333',
+              fontWeight: activeTab === tab.id ? '600' : '400',
+              boxShadow: activeTab === tab.id ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+              ':hover': {
+                backgroundColor: activeTab === tab.id ? '#0056b3' : '#e9ecef'
+              }
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div>
         {activeTab === 'misReservas' && (
           <div>
-            <h2>Mis Reservas</h2>
             <ReservaList />
           </div>
         )}
 
         {activeTab === 'users' && (
           <div>
-            <h2>Usuarios</h2>
+ 
             <table>
               <thead>
                 <tr>
                   <th onClick={() => handleSort('email')} style={{ cursor: 'pointer' }}>Email</th>
                   <th onClick={() => handleSort('nombre')} style={{ cursor: 'pointer' }}>Nombre</th>
-                  <th onClick={() => handleSort('verificado')} style={{ cursor: 'pointer' }}>Verificado</th>
+                  <th onClick={() => handleSort('verificado')} style={{ cursor: 'pointer' }}>Verif.</th>
                   <th onClick={() => handleSort('id_ext')} style={{ cursor: 'pointer' }}>Id_ext</th>
-                  <th onClick={() => handleSort('fecha_registro')} style={{ cursor: 'pointer' }}>Fecha Registro</th>
+                  <th onClick={() => handleSort('fecha_registro')} style={{ cursor: 'pointer' }}>F. Registro</th>
                 </tr>
               </thead>
               <tbody>
@@ -488,7 +518,7 @@ function AdminPanel() {
         )}
         {activeTab === 'pistas' && (
           <div>
-            <h2>Pistas</h2>
+
             <table>
               <thead>
                 <tr>
@@ -511,7 +541,7 @@ function AdminPanel() {
         )}
         {activeTab === 'reservas' && (
           <div>
-            <h2>Reservas</h2>
+
             <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
               <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                 <div>
@@ -582,7 +612,6 @@ function AdminPanel() {
                   <table style={{ width: '100%', marginBottom: '20px' }}>
                     <thead>
                       <tr>
-                        <th>ID</th>
                         <th>Pista</th>
                         <th>Fecha</th>
                         <th>Inicio</th>
@@ -593,7 +622,6 @@ function AdminPanel() {
                     <tbody>
                       {reservas.map(reserva => (
                         <tr key={reserva.id}>
-                          <td>{reserva.id}</td>
                           <td>{reserva.pista_id}</td>
                           <td>{formatDate(reserva.fecha)}</td>
                           <td>{formatTime(reserva.horaInicio)}</td>
@@ -692,7 +720,7 @@ function AdminPanel() {
         )}
         {activeTab === 'reservaMasiva' && (
           <div>
-            <h2>Reserva Masiva</h2>
+
             <ReservaMasiva />
           </div>
         )}
