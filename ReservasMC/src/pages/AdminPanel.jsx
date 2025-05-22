@@ -208,49 +208,67 @@ function AdminPanel() {
   };
 
   return (
-    <div>
+    <div style={{
+      maxWidth: '100%',
+      overflow: 'hidden',
+      padding: '10px'
+    }}>
       <h2>Panel de Administración</h2>
+      
+      {/* Contenedor de tabs con scroll horizontal en móviles */}
       <div style={{
-        display: 'flex',
-        gap: '5px',
-        padding: '5px 0',
-        borderBottom: '2px solid #e0e0e0',
+        width: '100%',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
         marginBottom: '10px'
       }}>
-        {[
-          { id: 'users', label: 'Usuarios' },
-          { id: 'pistas', label: 'Pistas' },
-          { id: 'reservas', label: 'Reservas' },
-          { id: 'misReservas', label: 'Mis Reservas' },
-          { id: 'config', label: 'Opciones' },
-          { id: 'reservaMasiva', label: 'Reserva Masiva' }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => {
-              setActiveTab(tab.id);
-              if (tab.id !== 'misReservas') setEditingUser(null);
-            }}
-            style={{
-              padding: '10px 20px',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              backgroundColor: activeTab === tab.id ? '#4D897D' : '#f8f9fa',
-              color: activeTab === tab.id ? 'white' : '#333',
-              fontWeight: activeTab === tab.id ? '600' : '400',
-              boxShadow: activeTab === tab.id ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
-              ':hover': {
-                backgroundColor: activeTab === tab.id ? '#0056b3' : '#e9ecef'
-              }
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
+        <div style={{
+          // display: 'flex',
+          gap: '5px',
+          padding: '5px 0',
+          borderBottom: '2px solid #e0e0e0',
+          minWidth: 'min-content' // Evita que los tabs se compriman
+        }}>
+          {[
+            { id: 'users', label: 'Usuarios' },
+            { id: 'pistas', label: 'Pistas' },
+            { id: 'reservas', label: 'Reservas' },
+            { id: 'misReservas', label: 'Mis Reservas' },
+            { id: 'config', label: 'Opciones' },
+            { id: 'reservaMasiva', label: 'Reserva Masiva' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id);
+                if (tab.id !== 'misReservas') setEditingUser(null);
+              }}
+              style={{
+                padding: '10px 20px',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                backgroundColor: activeTab === tab.id ? '#4D897D' : '#f8f9fa',
+                color: activeTab === tab.id ? 'white' : '#333',
+                fontWeight: activeTab === tab.id ? '600' : '400',
+                boxShadow: activeTab === tab.id ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                ':hover': {
+                  backgroundColor: activeTab === tab.id ? '#0056b3' : '#e9ecef'
+                }
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div>
+      {/* Contenedor del contenido con scroll horizontal cuando sea necesario */}
+      <div style={{
+        width: '100%',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch'
+      }}>
         {activeTab === 'misReservas' && (
           <div>
             <ReservaList />
@@ -260,14 +278,18 @@ function AdminPanel() {
         {activeTab === 'users' && (
           <div>
  
-            <table>
+            <table style={{
+              width: '100%',
+              minWidth: '600px', // Ancho mínimo para evitar que se comprima demasiado
+              borderCollapse: 'collapse'
+            }}>
               <thead>
                 <tr>
                   <th onClick={() => handleSort('email')} style={{ cursor: 'pointer' }}>Email</th>
                   <th onClick={() => handleSort('nombre')} style={{ cursor: 'pointer' }}>Nombre</th>
                   <th onClick={() => handleSort('verificado')} style={{ cursor: 'pointer' }}>Verif.</th>
-                  <th onClick={() => handleSort('id_ext')} style={{ cursor: 'pointer' }}>Id_ext</th>
-                  <th onClick={() => handleSort('fecha_registro')} style={{ cursor: 'pointer' }}>F. Registro</th>
+                  <th onClick={() => handleSort('id_ext')} style={{ cursor: 'pointer' }}>Socio</th>
+                  <th onClick={() => handleSort('fecha_registro')} style={{ cursor: 'pointer' }}>Registro</th>
                 </tr>
               </thead>
               <tbody>
@@ -280,7 +302,14 @@ function AdminPanel() {
                       backgroundColor: user.verificado ? 'inherit' : '#fff3cd'
                     }}
                   >
-                    <td>{user.email}</td>
+                    <td style={{ 
+                        maxWidth: '200px', 
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                      {user.email}
+                    </td>
                     <td>{user.nombre}</td>
                     <td>{user.verificado ? 'Sí' : 'No'}</td>
                     <td>{user.id_ext || '-'}</td>
@@ -290,32 +319,29 @@ function AdminPanel() {
               </tbody>
             </table>
             {editingUser && (
-              <div
-                style={{
-                  position: 'fixed',
-                  top: 0,
-                  left: 0,
-                  height: '100vh',
-                  width: '100vw',
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  zIndex: 1000,
+              <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '10px',
+                zIndex: 1000
+              }}>
+                <div style={{
+                  backgroundColor: '#fff',
+                  borderRadius: '8px',
                   padding: '20px',
-                  boxSizing: 'border-box',
-                }}
-              >
-                <div
-                  style={{
-                    backgroundColor: '#fff',
-                    borderRadius: '8px',
-                    padding: '30px',
-                    width: '400px',
-                    maxWidth: '100%',
-                    boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-                  }}
-                >
+                  width: '100%',
+                  maxWidth: '400px',
+                  maxHeight: '90vh',
+                  overflowY: 'auto',
+                  position: 'relative'
+                }}>
                   <h3 style={{ marginBottom: '20px', textAlign: 'center' }}>
                     Editar usuario: {editingUser.email}
                   </h3>
@@ -448,6 +474,25 @@ function AdminPanel() {
                       }}
                     />
                   </div>
+                                    <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Verificado:</label>
+                    <select
+                      name="verificado"
+                      value={editingUser.verificado ? '1' : '0'}
+                      onChange={(e) =>
+                        setEditingUser({ ...editingUser, verificado: e.target.value === '1' })
+                      }
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc'
+                      }}
+                    >
+                      <option value="0">No</option>
+                      <option value="1">Sí</option>
+                    </select>
+                  </div>
                   <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', marginBottom: '5px' }}>Relación:</label>
                     <select
@@ -542,8 +587,21 @@ function AdminPanel() {
         {activeTab === 'reservas' && (
           <div>
 
-            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-              <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+            <div style={{ 
+              marginBottom: '20px', 
+              padding: '15px', 
+              backgroundColor: '#f8f9fa', 
+              borderRadius: '8px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap',
+                gap: '15px', 
+                alignItems: 'center' 
+              }}>
                 <div>
                   <label style={{ marginRight: '8px' }}>Desde:</label>
                   <input
